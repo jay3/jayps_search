@@ -33,4 +33,44 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     {
         /** @todo save $item->get_diff somewhere to use it in after_save() and save time if threr is no changes */
     }
+
+    private function d($o) {
+        if (!empty($this->_properties['debug'])) {
+            print('<pre style="border:1px solid #0000FF; background-color: #CCCCFF; width:95%; height: auto; overflow: auto">');
+            print_r($o);
+            print('</pre>');
+        }
+    }
+
+    public function before_query(&$options)
+    {
+        print('<h3>before_query</h3>');
+        self::d($options);
+        if (array_key_exists('where', $options)) {
+            $where = $options['where'];
+
+            foreach ($where as $k => $w) {
+                //self::d($w);
+                if ($w[0] == 'keywords') {
+
+                    if (!empty($w[1][0])) {
+                        //$this->_properties['fields'];
+                        $where[$k] = array(
+                            array('jayps_search_word_occurence.mooc_word', $w[1][0]),
+                            array('jayps_search_word_occurence.mooc_join_table','jayps_user')
+                        );
+                        $where[$k] = array('jayps_search_word_occurence.mooc_word', $w[1][0]);
+
+                        //$where[] = array('jayps_search_word_occurence.mooc_join_table','jayps_user');
+                        $options['related'][] = 'jayps_search_word_occurence';
+
+                    } else {
+                        unset($where[$k]);
+                    }
+                }
+            }
+            $options['where'] = $where;
+        }
+        self::d($options);
+    }
 }
