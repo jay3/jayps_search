@@ -22,7 +22,6 @@ Just add the behaviour 'JayPS\Search\Orm_Behaviour_Searchable' in the model defi
         (...)
 
         'JayPS\Search\Orm_Behaviour_Searchable' => array(
-            'events' => array('after_save'),
             'fields' => array('monk_name', 'monk_summary'),
         ),
     );
