@@ -128,6 +128,7 @@ namespace JayPS\Search;
             //self::log($sql);
 
             $ordre = 1;
+            $word = '';
 
             $query->bind('ordre', $ordre);
             $query->bind('word',  $word);
