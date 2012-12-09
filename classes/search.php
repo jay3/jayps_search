@@ -61,7 +61,6 @@ namespace JayPS\Search;
             $sql  = "DELETE FROM " . $this->config['table_liaison'];
             $sql .= " WHERE " . $this->config['table_liaison_prefixe'] . "join_table = " . \Db::quote($this->config['table']);
             $sql .= " AND " . $this->config['table_liaison_prefixe'] . "foreign_id = $primary_key";
-            self::log($sql);
             \Db::query($sql)->execute();
         }
 
@@ -72,7 +71,7 @@ namespace JayPS\Search;
         function split($txt) {
             // scinde la phrase grâce aux virgules et espacements
             // inclus les " ", \r, \t, \n et \f
-            $words = preg_split("/[\s,'`�\"\(\)\.:;*%-]+/", $txt);
+            $words = preg_split("/[\s,'`�\"\(\)\.:;!\?*%-]+/", $txt);
 
             foreach($words as $k => $tmp) {
                 // en minuscule
