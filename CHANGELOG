@@ -1,0 +1,21 @@
+JayPS Search CHANGELOG
+
+December 09, 2012: version 0.2
+==============================
+
+* Add "search" with the ORM: find() supports 'keywords' in where()
+* Delete keywords when deleting items
+* MyISAM support (INSERT DELAYED, syntaxe of create_table.sql).
+* Better UTF-8 support (use of mb_* functions)
+* Improved 'debug' option
+
+Todo:
+-----
+* Find a way to avoid to require $_has_many to be public
+
+
+
+December 01, 2012: version 0.1
+==============================
+
+Initial version
