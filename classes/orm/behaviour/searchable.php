@@ -45,7 +45,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             $res = array();
             $res[$config['table_primary_key']] = $item->id;
             foreach($this->_properties['fields'] as $field) {
-                if (strpos($field, 'wysiwyg_') === 0) {
+                if (mb_strpos($field, 'wysiwyg_') === 0) {
                     $wysiwyg = str_replace('wysiwyg_', '', $field);
                     $res[$field] = $item->wysiwygs->{$wysiwyg};
                 } else {
@@ -132,12 +132,12 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
                         // sort keywords by length desc
                         uasort($keywords, function ($a, $b) {
-                            return strlen($a) < strlen($b);
+                            return mb_strlen($a) < mb_strlen($b);
                         });
 
                         // remove keywords shorter than 'min_word_len' characters
                         $keywords = array_filter($keywords, function ($a) {
-                            return strlen($a) >= $this->_config['min_word_len'];
+                            return mb_strlen($a) >= $this->_config['min_word_len'];
                         });
 
                         // remove duplicates
@@ -151,7 +151,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                         // $keywords as been modified, so keys are 0, 1, 2...
                         foreach ($keywords as $i => $keyword) {
                             $keyword = str_replace('%', '', $keyword);
-                            if (strpos($keyword, '*') !== false) {
+                            if (mb_strpos($keyword, '*') !== false) {
                                 $keyword = str_replace('*', '', $keyword) . '%';
                                 $operator = 'LIKE';
                             } else {

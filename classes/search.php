@@ -56,6 +56,9 @@ namespace JayPS\Search;
                 if (strpos($field, 'wysiwyg_') === 0) {
                     // it contains HTML tags
                     $txt = $res[$field];
+                    $txt = str_replace('&nbsp;', ' ', $txt);
+                    // example: &amp;
+                    $txt = html_entity_decode($txt);
                     //$txt = str_replace('>', '> ', $txt); // if we want 'test<sting>test2</strong>' => 'test test2'
                     $txt = strip_tags($txt);
                     $words = $this->split($txt);
@@ -63,6 +66,7 @@ namespace JayPS\Search;
                     $words = $this->split($res[$field]);
                 }
                 //self::log($words);
+                self::log(count($words).' words');
                 $this->extract_keywords($primary_key, $words, $field);
             }
         }
@@ -85,10 +89,10 @@ namespace JayPS\Search;
             $words = preg_split("/[\s,'`�\"\(\)\.:;!\?*%-]+/", $txt);
 
             foreach($words as $k => $tmp) {
-                // en minuscule
-                $words[$k] = strtolower($words[$k]);
-                // on enlève les mots de moins de $this->config['min_word_len'] lettres
-                if (strlen($words[$k]) < $this->config['min_word_len']) {
+                // string lowercase
+                $words[$k] = mb_strtolower($words[$k]);
+                // remove words shorter than $this->config['min_word_len'] caracters
+                if (mb_strlen($words[$k]) < $this->config['min_word_len']) {
                     unset($words[$k]);
                 }
             }
