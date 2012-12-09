@@ -24,9 +24,11 @@ namespace JayPS\Search;
                 'transaction'           => false,
             );
 
-            \Config::load('jayps_search::config', 'config');
+            //\Config::load('jayps_search::config', 'config');
 
-            $this->config = array_merge($default_config, \Config::get('config'), $config);
+
+            $this->config = array_merge($default_config, $config);
+
             //self::Log($this->config);
         }
 
