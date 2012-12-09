@@ -115,13 +115,12 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     public function before_query(&$options)
     {
         if (array_key_exists('where', $options)) {
-            self::d('before_query');
-            //self::d($options);
             $where = $options['where'];
 
             foreach ($where as $k => $w) {
 
                 if ($w[0] == 'keywords') {
+                    self::d('before_query');
                     //self::d($w);
 
                     $class = $this->_class;
@@ -169,7 +168,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                 }
             }
             $options['where'] = $where;
-            self::d($options);
+            //self::d($options);
         }
     }
 

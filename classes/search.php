@@ -22,6 +22,7 @@ namespace JayPS\Search;
                 'forbidden_words'       => array(),
                 'min_word_len'          => 4,
                 'transaction'           => false,
+                'insert_delayed'        => false,
             );
 
             //\Config::load('jayps_search::config', 'config');
@@ -112,7 +113,7 @@ namespace JayPS\Search;
                 \Db::query('START TRANSACTION')->execute();
             }
 
-            $sql  = 'INSERT INTO ' . $this->config['table_liaison'];
+            $sql  = 'INSERT '.($this->config['insert_delayed'] ? 'DELAYED' : '').' INTO ' . $this->config['table_liaison'];
             $sql .= ' (' . $this->config['table_liaison_prefixe'] . 'word';
             $sql .= ', ' . $this->config['table_liaison_prefixe'] . 'join_table';
             $sql .= ', ' . $this->config['table_liaison_prefixe'] . 'foreign_id';

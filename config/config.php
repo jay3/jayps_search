@@ -27,6 +27,9 @@ return array(
     /** @brief For debugging */
     'debug' => false,
 
-    /** @brief use a transaction to speed up InnDB insert */
+    /** @brief use a transaction to speed up InnoDB insert */
     'transaction' => true,
+
+    /** @brief use INSERT DELAYED, for MyISAM Engine only*/
+    'insert_delayed' => false,
 );
