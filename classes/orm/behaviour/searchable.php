@@ -13,11 +13,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         \Config::load('jayps_search::config', 'config');
         $this->_config = \Config::get('config');
 
-
-        $primary_key = $class::primary_key();
-        if (is_array($primary_key)) {
-            $primary_key = \Arr::get($primary_key, 0);
-        }
+        $primary_key = self::get_first_primary_key($class);
 
         $has_many = array(
             'key_from' => $primary_key,
@@ -42,24 +38,15 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
     public function after_save(\Nos\Orm\Model $item)
     {
-        $primary_key = $item->primary_key();
-        if (is_array($primary_key)) {
-            $primary_key = \Arr::get($primary_key, 0);
-        }
-
         if (!empty($this->_properties['fields'])) {
+
+            $config = $this->get_config($item);
+
             $res = array();
-            $res[$primary_key] = $item->id;
+            $res[$config['table_primary_key']] = $item->id;
             foreach($this->_properties['fields'] as $field) {
                 $res[$field] = $item->{$field};
             }
-            $config = array(
-                'table'                     => $item->table(),
-                'table_primary_key'         => $primary_key,
-                'table_fields_to_index'     => $this->_properties['fields'],
-            );
-
-            $config = array_merge($config, $this->_config);
 
             $search = new Search($config);
             $search->add_to_index($res);
@@ -70,6 +57,42 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     {
         /** @todo save $item->get_diff somewhere to use it in after_save() and save time if there is no changes */
     }
+
+    public function before_delete(\Nos\Orm\Model $item)
+    {
+        $config = $this->get_config($item);
+        $search = new Search($config);
+        $search->remove_from_index($item->id);
+    }
+
+    protected function get_config(\Nos\Orm\Model $item)
+    {
+        $config = array(
+            'table'                     => $item->table(),
+            'table_primary_key'         => self::get_first_primary_key($item),
+            'table_fields_to_index'     => $this->_properties['fields'],
+        );
+
+        $config = array_merge($config, $this->_config);
+
+        return $config;
+    }
+
+    protected static function get_first_primary_key($instance)
+    {
+        $primary_key = '';
+        if (is_object($instance)) {
+            $primary_key = $instance->primary_key();
+        } else {
+            // should be a class
+            $primary_key = $instance::primary_key();
+        }
+        if (is_array($primary_key)) {
+            $primary_key = \Arr::get($primary_key, 0);
+        }
+        return $primary_key;
+    }
+
 
     private function d($o) {
         if (!empty($this->_properties['debug'])) {

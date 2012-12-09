@@ -47,11 +47,7 @@ namespace JayPS\Search;
 
             self::log('add_to_index: '.$this->config['table'].':'.$primary_key);
 
-            // suppression des mots clés générés précédemment
-            $sql  = "DELETE FROM " . $this->config['table_liaison'];
-            $sql .= " WHERE " . $this->config['table_liaison_prefixe'] . "join_table = " . \Db::quote($this->config['table']);
-            $sql .= " AND " . $this->config['table_liaison_prefixe'] . "foreign_id = $primary_key";
-            \Db::query($sql)->execute();
+            $this->remove_from_index($primary_key);
 
             foreach ($this->config['table_fields_to_index'] as $field) {
                 $words = $this->split($res[$field]);
@@ -59,6 +55,16 @@ namespace JayPS\Search;
                 $this->extract_keywords($primary_key, $words, $field);
             }
         }
+        function remove_from_index($primary_key)
+        {
+            // suppression des mots clés générés précédemment
+            $sql  = "DELETE FROM " . $this->config['table_liaison'];
+            $sql .= " WHERE " . $this->config['table_liaison_prefixe'] . "join_table = " . \Db::quote($this->config['table']);
+            $sql .= " AND " . $this->config['table_liaison_prefixe'] . "foreign_id = $primary_key";
+            self::log($sql);
+            \Db::query($sql)->execute();
+        }
+
 
         /** @brief coupe une chaîne en mots
          *
