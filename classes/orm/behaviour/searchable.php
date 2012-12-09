@@ -12,6 +12,30 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     {
         \Config::load('jayps_search::config', 'config');
         $this->_config = \Config::get('config');
+
+
+        $primary_key = $class::primary_key();
+        if (is_array($primary_key)) {
+            $primary_key = \Arr::get($primary_key, 0);
+        }
+
+        $has_many = array(
+            'key_from' => $primary_key,
+            'model_to' => 'JayPS\Search\\Model_Keyword',
+            'key_to' => 'mooc_foreign_id',
+            'cascade_save' => false,
+            'cascade_delete' => false,
+        );
+
+        // $class::$_has_many need to be changed to public
+        $class::$_has_many['jayps_search_word_occurence'] = $has_many;
+        $class::$_has_many['jayps_search_word_occurence2'] = $has_many;
+        //d($class::$_has_many);
+
+        // if we add a static method add_has_many() in Nos\Orm\Model
+        //$class::add_has_many('jayps_search_word_occurence', $has_many);
+        //$class::add_has_many('jayps_search_word_occurence2', $has_many);
+
         parent::__construct($class);
     }
 
@@ -44,7 +68,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
     public function before_save(\Nos\Orm\Model $item)
     {
-        /** @todo save $item->get_diff somewhere to use it in after_save() and save time if threr is no changes */
+        /** @todo save $item->get_diff somewhere to use it in after_save() and save time if there is no changes */
     }
 
     private function d($o) {
@@ -63,27 +87,38 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             $where = $options['where'];
 
             foreach ($where as $k => $w) {
-                //self::d($w);
+
                 if ($w[0] == 'keywords') {
+                    self::d($w);
 
                     $class = $this->_class;
                     $table = $class::table();
 
-                    if (!empty($w[1][0])) {
-                        $where[$k] = array(
+                    /** @todo sort keywords by length, use only the first ones (5?) */
+
+                    if (!empty($w[1]) && is_array($w[1])) {
+                        /** @todo $w[1] can contain more than one element */
+                        $where[] = array(
                             array($this->_config['table_liaison'] . '.mooc_word', $w[1][0]),
                             array($this->_config['table_liaison'] . '.mooc_join_table', $table)
                         );
-
                         $options['related'][] = $this->_config['table_liaison'];
 
-                    } else {
-                        unset($where[$k]);
+                        if (!empty($w[1][1])) {
+                            $where[] = array(
+                                array($this->_config['table_liaison'] . '2.mooc_word', $w[1][1]),
+                                array($this->_config['table_liaison'] . '2.mooc_join_table', $table)
+                            );
+                            $options['related'][] = $this->_config['table_liaison'].'2';
+                        }
+
                     }
+                    unset($where[$k]);
                 }
             }
             $options['where'] = $where;
             self::d($options);
         }
     }
+
 }
