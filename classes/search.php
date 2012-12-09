@@ -50,7 +50,16 @@ namespace JayPS\Search;
             $this->remove_from_index($primary_key);
 
             foreach ($this->config['table_fields_to_index'] as $field) {
-                $words = $this->split($res[$field]);
+
+                if (strpos($field, 'wysiwyg_') === 0) {
+                    // it contains HTML tags
+                    $txt = $res[$field];
+                    //$txt = str_replace('>', '> ', $txt); // if we want 'test<sting>test2</strong>' => 'test test2'
+                    $txt = strip_tags($txt);
+                    $words = $this->split($txt);
+                } else {
+                    $words = $this->split($res[$field]);
+                }
                 //self::log($words);
                 $this->extract_keywords($primary_key, $words, $field);
             }

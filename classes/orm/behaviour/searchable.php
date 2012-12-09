@@ -45,7 +45,12 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             $res = array();
             $res[$config['table_primary_key']] = $item->id;
             foreach($this->_properties['fields'] as $field) {
-                $res[$field] = $item->{$field};
+                if (strpos($field, 'wysiwyg_') === 0) {
+                    $wysiwyg = str_replace('wysiwyg_', '', $field);
+                    $res[$field] = $item->wysiwygs->{$wysiwyg};
+                } else {
+                    $res[$field] = $item->{$field};
+                }
             }
 
             $search = new Search($config);
