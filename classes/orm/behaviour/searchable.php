@@ -78,7 +78,12 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             'table_fields_to_index'     => $this->_properties['fields'],
         );
 
-        $config = array_merge($config, $this->_config);
+        $config = array_merge($this->_config, $config);
+
+        if (isset($this->_properties['debug'])) {
+            // if the propertie 'debug' is set in the configuration of the behaviour, we use it
+            $config['debug'] = $this->_properties['debug'];
+        }
 
         return $config;
     }
@@ -100,7 +105,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
 
     private function d($o) {
-        if (!empty($this->_properties['debug'])) {
+        if (!empty($this->_properties['debug']) || !empty($this->_config['debug'])) {
             print('<pre style="border:1px solid #0000FF; background-color: #CCCCFF; width:95%; height: auto; overflow: auto">');
             print_r($o);
             print('</pre>');

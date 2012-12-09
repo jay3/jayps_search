@@ -35,8 +35,10 @@ namespace JayPS\Search;
         /** @brief Pour debugger facilement l'application
          *
          */
-        static function log($o) {
-             \Log::debug(print_r($o, true));
+        protected function log($o) {
+            if (!empty($this->config['debug'])) {
+                \Log::debug(print_r($o, true));
+            }
         }
 
         function add_to_index($res) {

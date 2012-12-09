@@ -24,6 +24,8 @@ return array(
     /** @brief max number of joins for a search */
     'max_join' => 4,
 
+    /** @brief For debugging */
+    'debug' => false,
 
     /** @brief use a transaction to speed up InnDB insert */
     'transaction' => true,
