@@ -27,14 +27,14 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             'cascade_delete' => false,
         );
 
-        // $class::$_has_many need to be changed to public
-        $class::$_has_many['jayps_search_word_occurence'] = $has_many;
-        $class::$_has_many['jayps_search_word_occurence2'] = $has_many;
-        //d($class::$_has_many);
+        for($i = 1; $i <= $this->_config['max_join']; $i++) {
+            // $class::$_has_many need to be changed to public
+            $class::$_has_many['jayps_search_word_occurence'.$i] = $has_many;
+                        //d($class::$_has_many);
 
-        // if we add a static method add_has_many() in Nos\Orm\Model
-        //$class::add_has_many('jayps_search_word_occurence', $has_many);
-        //$class::add_has_many('jayps_search_word_occurence2', $has_many);
+            // if we add a static method add_has_many() in Nos\Orm\Model
+            //$class::add_has_many('jayps_search_word_occurence'.$i, $has_many);
+        }
 
         parent::__construct($class);
     }
@@ -83,33 +83,52 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     {
         if (array_key_exists('where', $options)) {
             self::d('before_query');
-            self::d($options);
+            //self::d($options);
             $where = $options['where'];
 
             foreach ($where as $k => $w) {
 
                 if ($w[0] == 'keywords') {
-                    self::d($w);
+                    //self::d($w);
 
                     $class = $this->_class;
                     $table = $class::table();
 
-                    /** @todo sort keywords by length, use only the first ones (5?) */
+                    $keywords = $w[1];
+                    if (!empty($keywords) && is_array($keywords)) {
 
-                    if (!empty($w[1]) && is_array($w[1])) {
-                        /** @todo $w[1] can contain more than one element */
-                        $where[] = array(
-                            array($this->_config['table_liaison'] . '.mooc_word', $w[1][0]),
-                            array($this->_config['table_liaison'] . '.mooc_join_table', $table)
-                        );
-                        $options['related'][] = $this->_config['table_liaison'];
+                        // sort keywords by length desc
+                        uasort($keywords, function ($a, $b) {
+                            return strlen($a) < strlen($b);
+                        });
 
-                        if (!empty($w[1][1])) {
+                        // remove keywords shorter than 'min_word_len' characters
+                        $keywords = array_filter($keywords, function ($a) {
+                            return strlen($a) >= $this->_config['min_word_len'];
+                        });
+
+                        // remove duplicates
+                        $keywords = array_unique($keywords);
+
+                        // truncate to 'max_join' keywords
+                        $keywords = array_slice($keywords, 0, $this->_config['max_join']);
+
+                        self::d($keywords);
+
+                        // $keywords as been modified, so keys are 0, 1, 2...
+                        foreach ($keywords as $i => $keyword) {
+                            $keyword = str_replace('%', '', $keyword);
+                            if (strpos($keyword, '*') !== false) {
+                                $keyword = str_replace('*', '', $keyword) . '%';
+                                $operator = 'LIKE';
+                            } else {
+                                $operator = '=';
+                            }
                             $where[] = array(
-                                array($this->_config['table_liaison'] . '2.mooc_word', $w[1][1]),
-                                array($this->_config['table_liaison'] . '2.mooc_join_table', $table)
+                                array($this->_config['table_liaison'] . ($i+1) . '.mooc_word', $operator,  $keyword),
+                                array($this->_config['table_liaison'] . ($i+1) . '.mooc_join_table', $table)
                             );
-                            $options['related'][] = $this->_config['table_liaison'].'2';
+                            $options['related'][] = $this->_config['table_liaison'].($i+1);
                         }
 
                     }

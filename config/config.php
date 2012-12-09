@@ -21,6 +21,10 @@ return array(
     /** @brief longueur mimimum des mots à indexer */
     'min_word_len' => 3,
 
+    /** @brief max number of joins for a search */
+    'max_join' => 4,
+
+
     /** @brief use a transaction to speed up InnDB insert */
     'transaction' => true,
 );

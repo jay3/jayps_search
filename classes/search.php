@@ -66,7 +66,7 @@ namespace JayPS\Search;
         function split($txt) {
             // scinde la phrase grâce aux virgules et espacements
             // inclus les " ", \r, \t, \n et \f
-            $words = preg_split("/[\s,'`�\"\(\)\.:;-]+/", $txt);
+            $words = preg_split("/[\s,'`�\"\(\)\.:;*%-]+/", $txt);
 
             foreach($words as $k => $tmp) {
                 // en minuscule
