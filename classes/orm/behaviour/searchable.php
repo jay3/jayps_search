@@ -152,7 +152,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                             );
                             $options['related'][] = static::$_config['table_liaison'].($i+1);
                         }
-
+                        $options['group_by'] = self::get_first_primary_key($class);
                     }
                     unset($where[$k]);
                 }
