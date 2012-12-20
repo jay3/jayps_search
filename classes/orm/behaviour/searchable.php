@@ -4,8 +4,6 @@ namespace JayPS\Search;
 
 class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 {
-    protected $_properties = array();
-
     protected static $_config = array();
 
     public static function add_relations(&$config, $primary_key) {
