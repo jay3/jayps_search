@@ -127,7 +127,11 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                     $table = $class::table();
 
                     $keywords = $w[1];
-                    if (!empty($keywords) && is_array($keywords)) {
+                    if (!empty($keywords)) {
+
+                        if (!is_array($keywords)) {
+                            $keywords = explode(' ', $keywords);
+                        }
 
                         // sort keywords by length desc
                         uasort($keywords, function ($a, $b) {
