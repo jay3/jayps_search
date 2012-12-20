@@ -6,12 +6,12 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 {
     protected $_properties = array();
 
-    protected $_config = array();
+    protected static $_config = array();
 
     public function __construct($class)
     {
         \Config::load('jayps_search::config', 'config');
-        $this->_config = \Config::get('config');
+        static::$_config = \Config::get('config');
 
         $primary_key = self::get_first_primary_key($class);
 
@@ -23,7 +23,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             'cascade_delete' => false,
         );
 
-        for($i = 1; $i <= $this->_config['max_join']; $i++) {
+        for($i = 1; $i <= static::$_config['max_join']; $i++) {
             // $class::$_has_many need to be changed to public
             $class::$_has_many['jayps_search_word_occurence'.$i] = $has_many;
                         //d($class::$_has_many);
@@ -78,7 +78,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             'table_fields_to_index'     => $this->_properties['fields'],
         );
 
-        $config = array_merge($this->_config, $config);
+        $config = array_merge(static::$_config, $config);
 
         if (isset($this->_properties['debug'])) {
             // if the propertie 'debug' is set in the configuration of the behaviour, we use it
@@ -105,7 +105,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
 
     private function d($o) {
-        if (!empty($this->_properties['debug']) || !empty($this->_config['debug'])) {
+        if (!empty($this->_properties['debug']) || !empty(static::$_config['debug'])) {
             print('<pre style="border:1px solid #0000FF; background-color: #CCCCFF; width:95%; height: auto; overflow: auto">');
             print_r($o);
             print('</pre>');
@@ -140,14 +140,14 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
                         // remove keywords shorter than 'min_word_len' characters
                         $keywords = array_filter($keywords, function ($a) {
-                            return mb_strlen($a) >= $this->_config['min_word_len'];
+                            return mb_strlen($a) >= static::$_config['min_word_len'];
                         });
 
                         // remove duplicates
                         $keywords = array_unique($keywords);
 
                         // truncate to 'max_join' keywords
-                        $keywords = array_slice($keywords, 0, $this->_config['max_join']);
+                        $keywords = array_slice($keywords, 0, static::$_config['max_join']);
 
                         self::d($keywords);
 
@@ -161,10 +161,10 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                                 $operator = '=';
                             }
                             $where[] = array(
-                                array($this->_config['table_liaison'] . ($i+1) . '.mooc_word', $operator,  $keyword),
-                                array($this->_config['table_liaison'] . ($i+1) . '.mooc_join_table', $table)
+                                array(static::$_config['table_liaison'] . ($i+1) . '.mooc_word', $operator,  $keyword),
+                                array(static::$_config['table_liaison'] . ($i+1) . '.mooc_join_table', $table)
                             );
-                            $options['related'][] = $this->_config['table_liaison'].($i+1);
+                            $options['related'][] = static::$_config['table_liaison'].($i+1);
                         }
 
                     }
