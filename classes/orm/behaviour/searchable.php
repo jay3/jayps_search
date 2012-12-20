@@ -8,33 +8,21 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
     protected static $_config = array();
 
-    public function __construct($class)
-    {
+    public static function add_relations(&$config, $primary_key) {
         \Config::load('jayps_search::config', 'config');
         static::$_config = \Config::get('config');
 
-        $primary_key = self::get_first_primary_key($class);
-
         $has_many = array(
-            'key_from' => $primary_key,
-            'model_to' => 'JayPS\Search\\Model_Keyword',
-            'key_to' => 'mooc_foreign_id',
-            'cascade_save' => false,
+            'key_from'       => $primary_key,
+            'model_to'       => 'JayPS\Search\Model_Keyword',
+            'key_to'         => 'mooc_foreign_id',
+            'cascade_save'   => false,
             'cascade_delete' => false,
         );
-
         for($i = 1; $i <= static::$_config['max_join']; $i++) {
-            // $class::$_has_many need to be changed to public
-            $class::$_has_many['jayps_search_word_occurence'.$i] = $has_many;
-                        //d($class::$_has_many);
-
-            // if we add a static method add_has_many() in Nos\Orm\Model
-            //$class::add_has_many('jayps_search_word_occurence'.$i, $has_many);
+            $config['has_many']['jayps_search_word_occurence'.$i] = $has_many;
         }
-
-        parent::__construct($class);
     }
-
 
     public function after_save(\Nos\Orm\Model $item)
     {
