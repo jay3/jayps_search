@@ -6,6 +6,22 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 {
     protected static $_config = array();
 
+    public static function init()
+    {
+        \Config::load('jayps_search::config', 'config');
+        static::$_config = \Config::get('config');
+
+        if (!empty(static::$_config['observed_models']) && is_array(static::$_config['observed_models'])) {
+            foreach(static::$_config['observed_models'] as $name => $data) {
+
+                \Event::register_function('config|'.$name, function(&$config) use ($data) {
+                    $config['behaviours']['JayPS\Search\Orm_Behaviour_Searchable'] = $data['config_behaviour'];
+
+                    \JayPS\Search\Orm_Behaviour_Searchable::add_relations($config, $data['primary_key']);
+                });
+            }
+        }
+    }
     public static function add_relations(&$config, $primary_key) {
         \Config::load('jayps_search::config', 'config');
         static::$_config = \Config::get('config');
