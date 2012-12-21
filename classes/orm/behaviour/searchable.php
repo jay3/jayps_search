@@ -140,9 +140,10 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                             return mb_strlen($a) < mb_strlen($b);
                         });
 
+                        $min_word_len = static::$_config['min_word_len'];
                         // remove keywords shorter than 'min_word_len' characters
-                        $keywords = array_filter($keywords, function ($a) {
-                            return mb_strlen($a) >= static::$_config['min_word_len'];
+                        $keywords = array_filter($keywords, function ($a) use ($min_word_len) {
+                            return mb_strlen($a) >= $min_word_len;
                         });
 
                         // remove duplicates
