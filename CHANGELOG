@@ -1,5 +1,12 @@
 JayPS Search CHANGELOG
 
+December 20, 2012: version 0.3
+==============================
+
+* Support search by string (keywords separated by spaces)
+* Use of configuration: $_has_many no longer needs to be public
+
+
 December 09, 2012: version 0.2
 ==============================
 
