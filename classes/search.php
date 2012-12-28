@@ -68,7 +68,7 @@ namespace JayPS\Search;
                 }
                 //self::log($words);
                 self::log(count($words).' words');
-                $this->extract_keywords($primary_key, $words, $field);
+                $this->insert_keywords($primary_key, $words, $field);
             }
         }
         function remove_from_index($primary_key)
@@ -100,7 +100,7 @@ namespace JayPS\Search;
             return $words;
         }
 
-        function extract_keywords($primary_key, $words, $field) {
+        protected function insert_keywords($primary_key, $words, $field) {
 
             if (!$primary_key) {
                 return;
@@ -113,30 +113,33 @@ namespace JayPS\Search;
                 \Db::query('START TRANSACTION')->execute();
             }
 
-            $sql  = 'INSERT '.($this->config['insert_delayed'] ? 'DELAYED' : '').' INTO ' . $this->config['table_liaison'];
-            $sql .= ' (' . $this->config['table_liaison_prefixe'] . 'word';
-            $sql .= ', ' . $this->config['table_liaison_prefixe'] . 'join_table';
-            $sql .= ', ' . $this->config['table_liaison_prefixe'] . 'foreign_id';
-            $sql .= ', ' . $this->config['table_liaison_prefixe'] . 'field';
-            $sql .= ', ' . $this->config['table_liaison_prefixe'] . 'ordre';
-            $sql .= ') VALUES';
-            $sql .= ' (:word';
-            $sql .= ', ' . \Db::quote($this->config['table']);
-            $sql .= ', ' . \Db::quote($primary_key);
-            $sql .= ', ' . \Db::quote($field);
-            $sql .= ', :ordre)';
-            $query = \DB::query($sql);
-            //self::log($sql);
+            $sqli  = 'INSERT '.($this->config['insert_delayed'] ? 'DELAYED' : '').' INTO ' . $this->config['table_liaison'];
+            $sqli .= ' (' . $this->config['table_liaison_prefixe'] . 'word';
+            $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'join_table';
+            $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'foreign_id';
+            $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'field';
+            $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'ordre';
+            $sqli .= ') VALUES';
 
-            $ordre = 1;
-            $word = '';
-
-            $query->bind('ordre', $ordre);
-            $query->bind('word',  $word);
-
-            foreach ($words as $word) {
-                $query->execute();
-                $ordre++;
+            // Chunks $words into smaller arrays. The last chunk may contain less elements.
+            $words_by_insert = intval($this->config['words_by_insert']) > 0 ? intval($this->config['words_by_insert']) : 100;
+            foreach (array_chunk($words, $words_by_insert) as $words2) {
+                $sql = $sqli;
+                $ordre = 1;
+                foreach ($words2 as $word) {
+                    if ($ordre > 1) {
+                        $sql .= ',';
+                    }
+                    $sql .= ' (' . \Db::quote($word);
+                    $sql .= ', ' . \Db::quote($this->config['table']);
+                    $sql .= ', ' . \Db::quote($primary_key);
+                    $sql .= ', ' . \Db::quote($field);
+                    $sql .= ', ' . \Db::quote($ordre);
+                    $sql .= ')';
+                    $ordre++;
+                }
+                //self::log($sql);
+                \DB::query($sql)->execute();
             }
 
             if ($this->config['transaction']) {

@@ -28,8 +28,11 @@ return array(
     'debug' => false,
 
     /** @brief use a transaction to speed up InnoDB insert */
-    'transaction' => true,
+    'transaction' => false,
 
     /** @brief use INSERT DELAYED, for MyISAM Engine only*/
-    'insert_delayed' => false,
+    'insert_delayed' => true,
+
+    /** @brief group insertion of words */
+    'words_by_insert' => 100,
 );
