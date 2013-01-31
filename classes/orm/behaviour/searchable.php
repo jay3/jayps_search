@@ -2,6 +2,8 @@
 
 namespace JayPS\Search;
 
+\Package::load('orm');
+
 class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 {
     protected static $_config = array();

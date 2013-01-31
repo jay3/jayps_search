@@ -28,7 +28,7 @@ Configure which models will be searchable for example in your bootstrap.php:
             ),
         );
 
-        $config['observed_models']['nos::model/page'] = array(
+        $config['observed_models']['noviusos_page::model/page'] = array(
             'primary_key' => 'page_id',
             'config_behaviour' => array(
                 'fields' => array('page_title', 'wysiwyg_content'),
@@ -41,14 +41,14 @@ Configure which models will be searchable for example in your bootstrap.php:
 
 To use the search with find(), simply provide an array of keywords. '*' acts as a joker at the end.
 
-    $pages = NosModel_Page::find('all', array(
+    $pages = \Nos\Page\Model_Page::find('all', array(
         'where' => array(
             array('keywords', 'chimpa* monkey'),
         ),
         'rows_limit' => 200,
     ));
 
-    $monkeys = NosMonkeyModel_Monkey::find('all', array(
+    $monkeys = \Nos\Monkey\Model_Monkey::find('all', array(
         'where' => array(
             array('keywords', 'chimpa* monkey'),
         ),
