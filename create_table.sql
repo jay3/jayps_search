@@ -7,6 +7,6 @@ CREATE TABLE IF NOT EXISTS `jayps_search_word_occurence` (
   KEY `mooc_word` (`mooc_word`),
   KEY `mooc_join_table` (`mooc_join_table`),
   KEY `mooc_foreign_id` (`mooc_foreign_id`),
-  KEY `mooc_type` (`mooc_field`)
+  KEY `mooc_field` (`mooc_field`)
 ) DEFAULT CHARSET=utf8;
 
