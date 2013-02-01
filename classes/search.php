@@ -56,19 +56,13 @@ namespace JayPS\Search;
 
                 if (strpos($field, 'wysiwyg_') === 0) {
                     // it contains HTML tags
-                    $txt = $res[$field];
-                    $txt = str_replace('&nbsp;', ' ', $txt);
-                    // example: &amp;
-                    $txt = html_entity_decode($txt);
-                    //$txt = str_replace('>', '> ', $txt); // if we want 'test<sting>test2</strong>' => 'test test2'
-                    $txt = strip_tags($txt);
-                    $words = $this->split($txt);
+                    $scores = $this->split($res[$field], true);
                 } else {
-                    $words = $this->split($res[$field]);
+                    $scores = $this->split($res[$field]);
                 }
-                //self::log($words);
-                self::log(count($words).' words');
-                $this->insert_keywords($primary_key, $words, $field);
+                //self::log($scores);
+                self::log(count($scores).' words');
+                $this->insert_keywords($primary_key, $scores, $field);
             }
         }
         function remove_from_index($primary_key)
@@ -84,28 +78,56 @@ namespace JayPS\Search;
         /** @brief coupe une chaîne en mots
          *
          */
-        function split($txt) {
+        function split($txt, $html = false) {
+            $scores = array();
+            if ($html) {
+                $txt = str_replace('&nbsp;', ' ', $txt);
+                // example: &amp;
+                $txt = html_entity_decode($txt);
+                //$txt = str_replace('>', '> ', $txt); // if we want 'test<sting>test2</strong>' => 'test test2'
+
+                $txt = strip_tags($txt);
+            }
+            //if (count($scores)) d($scores);
+
             // scinde la phrase grâce aux virgules et espacements
             // inclus les " ", \r, \t, \n et \f
             $words = preg_split("/[\s,'`�\"\(\)\.:;!\?*%-]+/", $txt);
 
-            foreach($words as $k => $tmp) {
+            $i = 0;
+            foreach($words as $word) {
+                $i++;
                 // string lowercase
-                $words[$k] = mb_strtolower($words[$k]);
+                $word = mb_strtolower($word);
                 // remove words shorter than $this->config['min_word_len'] caracters
-                if (mb_strlen($words[$k]) < $this->config['min_word_len']) {
-                    unset($words[$k]);
+                if (mb_strlen($word) < $this->config['min_word_len']) {
+                    continue;
+                }
+
+                $score = 1 / (log10(($i+9) / 10) + 1);
+
+                if (empty($scores[$word])) {
+                    //self::log( $i.$word.':'.$score );
+                    $scores[$word] = $score;
+                } else {
+                    //self::log($i.$word.':'.$scores[$word].'+'.$score.'='.($scores[$word]+$score));
+                    $scores[$word] += $score;
                 }
             }
-            return $words;
+
+            // sort words by score DESC
+            arsort($scores);
+            //d($scores);
+
+            return $scores;
         }
 
-        protected function insert_keywords($primary_key, $words, $field) {
+        protected function insert_keywords($primary_key, $scores, $field) {
 
             if (!$primary_key) {
                 return;
             }
-            if (!count($words)) {
+            if (!count($scores)) {
                 return;
             }
 
@@ -123,23 +145,18 @@ namespace JayPS\Search;
 
             // Chunks $words into smaller arrays. The last chunk may contain less elements.
             $words_by_insert = intval($this->config['words_by_insert']) > 0 ? intval($this->config['words_by_insert']) : 100;
-            $position = 0;
-            foreach (array_chunk($words, $words_by_insert) as $words2) {
+            foreach (array_chunk($scores, $words_by_insert, true) as $scores2) {
                 $sql = $sqli;
                 $i = 1;
-                foreach ($words2 as $word) {
-                    $position++;
+                foreach ($scores2 as $word => $score) {
                     if ($i++ > 1) {
                         $sql .= ',';
                     }
-                    // score decrease from 100 to 0 with the position in the text
-                    $score = intval(100 / (log10(($position + 9) / 10) + 1));
-
                     $sql .= ' (' . \Db::quote($word);
                     $sql .= ', ' . \Db::quote($this->config['table']);
                     $sql .= ', ' . \Db::quote($primary_key);
                     $sql .= ', ' . \Db::quote($field);
-                    $sql .= ', ' . \Db::quote($score);
+                    $sql .= ', ' . intval(10 * $score);
                     $sql .= ')';
                 }
                 self::log($sql);
