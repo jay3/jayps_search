@@ -120,11 +120,12 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     {
         if (array_key_exists('where', $options)) {
             $where = $options['where'];
+            $keywords = array();
 
             foreach ($where as $k => $w) {
 
                 if ($w[0] == 'keywords') {
-                    self::d('before_query');
+                    //self::d('before_query');
                     //self::d($w);
 
                     $class = $this->_class;
@@ -154,7 +155,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                         // truncate to 'max_join' keywords
                         $keywords = array_slice($keywords, 0, static::$_config['max_join']);
 
-                        self::d($keywords);
+                        //self::d($keywords);
 
                         // $keywords as been modified, so keys are 0, 1, 2...
                         foreach ($keywords as $i => $keyword) {
@@ -177,6 +178,33 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                 }
             }
             $options['where'] = $where;
+            if (!empty($options['order_by'])) {
+                //self::d($options['order_by']);
+                $order_by = (array) $options['order_by'];
+
+                foreach ($order_by as $k_ob => $v_ob) {
+                    if (in_array('jayps_search_score', (array) $v_ob)) {
+                        if (count($keywords) > 0) {
+                            $sql_expr = '';
+                            for ($i = 1; $i <= count($keywords); $i++) {
+                                if ($sql_expr) {
+                                    $sql_expr .= '+';
+                                }
+                                $sql_expr .= 'SUM(t'.$i.'.mooc_score)';
+                            }
+                            $sql_expr = '(' . $sql_expr . ')';
+                            $order = 'DESC';
+                            if (is_array($v_ob) && ($v_ob[1] == 'ASC')) {
+                                $order = 'ASC';
+                            }
+                            $order_by[$k_ob] = array(\DB::expr($sql_expr), $order);
+                        }
+                    }
+                }
+                $options['order_by'] = $order_by;
+                //self::d($options['order_by']);
+            }
+
             //self::d($options);
         }
     }
