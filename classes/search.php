@@ -118,27 +118,31 @@ namespace JayPS\Search;
             $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'join_table';
             $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'foreign_id';
             $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'field';
-            $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'ordre';
+            $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'score';
             $sqli .= ') VALUES';
 
             // Chunks $words into smaller arrays. The last chunk may contain less elements.
             $words_by_insert = intval($this->config['words_by_insert']) > 0 ? intval($this->config['words_by_insert']) : 100;
+            $position = 0;
             foreach (array_chunk($words, $words_by_insert) as $words2) {
                 $sql = $sqli;
-                $ordre = 1;
+                $i = 1;
                 foreach ($words2 as $word) {
-                    if ($ordre > 1) {
+                    $position++;
+                    if ($i++ > 1) {
                         $sql .= ',';
                     }
+                    // score decrease from 100 to 0 with the position in the text
+                    $score = intval(100 / (log10(($position + 9) / 10) + 1));
+
                     $sql .= ' (' . \Db::quote($word);
                     $sql .= ', ' . \Db::quote($this->config['table']);
                     $sql .= ', ' . \Db::quote($primary_key);
                     $sql .= ', ' . \Db::quote($field);
-                    $sql .= ', ' . \Db::quote($ordre);
+                    $sql .= ', ' . \Db::quote($score);
                     $sql .= ')';
-                    $ordre++;
                 }
-                //self::log($sql);
+                self::log($sql);
                 \DB::query($sql)->execute();
             }
 
