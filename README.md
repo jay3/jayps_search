@@ -5,12 +5,12 @@ A very simple search engine for Novius OS, based on Behaviours.
 
 Licensed under [MIT License](http://opensource.org/licenses/MIT)
 
-Current version: 0.3
+Current version: 0.4
 
 **Get started**
 
 * Execute the MySQL script jayps_search/create_tables.sql in your Novius OS database.
-* Add the behaviour 'JayPS\Search\Orm_Behaviour_Searchable' in one of your model.
+* Configure which models will be searchable in your bootstrap.php (see below).
  For examples, see [JayPS Search Test](https://github.com/jay3/jayps_search_test)
 * Add new items or save existing ones
 * Start searching using find('all', array('where' => array(array('keywords', 'keyword1 keyword2'))))
@@ -45,7 +45,8 @@ To use the search with find(), simply provide an array of keywords. '*' acts as 
         'where' => array(
             array('keywords', 'chimpa* monkey'),
         ),
-        'rows_limit' => 200,
+        'rows_limit' => 10,
+        'order_by' => array('jayps_search_score', 'page_title'),
     ));
 
     $monkeys = \Nos\Monkey\Model_Monkey::find('all', array(
@@ -53,5 +54,5 @@ To use the search with find(), simply provide an array of keywords. '*' acts as 
             array('keywords', 'chimpa* monkey'),
         ),
         'rows_limit' => 200,
-        'order_by' => array('monk_name' => 'asc')
+        'order_by' => array('jayps_search_score', 'monk_name'),
     ));

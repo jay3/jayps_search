@@ -1,5 +1,20 @@
 JayPS Search CHANGELOG
 
+February 2nd, 2013: version 0.4
+==============================
+* Migrate application to Novius-OS 0.2
+
+* Change mooc_ordre to mooc_ordre
+ALTER TABLE `jayps_search_word_occurence` CHANGE `mooc_ordre` `mooc_score` TINYINT( 3 ) UNSIGNED NOT NULL;
+
+* Add option 'jayps_search_score' to 'order_by' to order results by revelance. Example:
+    $pages = \Nos\Page\Model_Page::find('all', array(
+        'where' => array(
+            array('keywords', 'key1 key2'),
+        ),
+        'order_by' => array('jayps_search_score', 'page_title'),
+    ));
+
 December 20, 2012: version 0.3
 ==============================
 
