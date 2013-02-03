@@ -8,7 +8,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 {
     protected static $_config = array();
 
-    public static function init()
+    public static function init($add_relations = false)
     {
         \Config::load('jayps_search::config', 'config');
         static::$_config = \Config::get('config');
@@ -16,18 +16,41 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         if (!empty(static::$_config['observed_models']) && is_array(static::$_config['observed_models'])) {
             foreach(static::$_config['observed_models'] as $name => $data) {
 
-                \Event::register_function('config|'.$name, function(&$config) use ($data) {
+                \Event::register_function('config|'.$name, function(&$config) use ($data, $add_relations) {
                     $config['behaviours']['JayPS\Search\Orm_Behaviour_Searchable'] = $data['config_behaviour'];
 
-                    \JayPS\Search\Orm_Behaviour_Searchable::add_relations($config, $data['primary_key']);
+                    if ($add_relations) {
+                        \JayPS\Search\Orm_Behaviour_Searchable::add_relations($config, $data['primary_key']);
+                    }
                 });
+
             }
         }
     }
-    public static function add_relations(&$config, $primary_key) {
-        \Config::load('jayps_search::config', 'config');
-        static::$_config = \Config::get('config');
 
+    public static function init_relations($config_name = '') {
+        if ($config_name) {
+            // add relations to a specific model
+            if (!empty(static::$_config['observed_models'][$config_name])) {
+                $data = static::$_config['observed_models'][$config_name];
+                \Event::register_function('config|'.$config_name, function(&$config) use ($data) {
+                    \JayPS\Search\Orm_Behaviour_Searchable::add_relations($config, $data['primary_key']);
+                });
+            }
+        } else {
+            // add relations to every observed models
+            if (!empty(static::$_config['observed_models']) && is_array(static::$_config['observed_models'])) {
+                foreach(static::$_config['observed_models'] as $name => $data) {
+
+                    \Event::register_function('config|'.$name, function(&$config) use ($data) {
+                        \JayPS\Search\Orm_Behaviour_Searchable::add_relations($config, $data['primary_key']);
+                    });
+                }
+            }
+        }
+    }
+
+    protected static function add_relations(&$config, $primary_key) {
         $has_many = array(
             'key_from'       => $primary_key,
             'model_to'       => 'JayPS\Search\Model_Keyword',
