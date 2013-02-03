@@ -157,30 +157,14 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                     $keywords = $w[1];
                     if (!empty($keywords)) {
 
-                        if (!is_array($keywords)) {
-                            $keywords = explode(' ', $keywords);
-                        }
-
-                        // sort keywords by length desc
-                        uasort($keywords, function ($a, $b) {
-                            return mb_strlen($a) < mb_strlen($b);
-                        });
-
-                        $min_word_len = static::$_config['min_word_len'];
-                        // remove keywords shorter than 'min_word_len' characters
-                        $keywords = array_filter($keywords, function ($a) use ($min_word_len) {
-                            return mb_strlen($a) >= $min_word_len;
-                        });
-
-                        // remove duplicates
-                        $keywords = array_unique($keywords);
-
-                        // truncate to 'max_join' keywords
-                        $keywords = array_slice($keywords, 0, static::$_config['max_join']);
+                        $keywords = Search::generate_keywords($keywords, array(
+                            'min_word_len' => static::$_config['min_word_len'],
+                            'max_keywords' => static::$_config['max_join'],
+                        ));
 
                         //self::d($keywords);
 
-                        // $keywords as been modified, so keys are 0, 1, 2...
+                        // $keywords has been modified, so keys are 0, 1, 2...
                         foreach ($keywords as $i => $keyword) {
                             $keyword = str_replace('%', '', $keyword);
                             if (mb_strpos($keyword, '*') !== false) {

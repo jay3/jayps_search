@@ -167,4 +167,34 @@ namespace JayPS\Search;
                 \Db::query('COMMIT')->execute();
             }
         }
+        public static function generate_keywords($keywords, $params) {
+            $default_params = array(
+                'min_word_len' => 2,
+                'max_keywords' => 5,
+            );
+            $params = array_merge($default_params, $params);
+
+            if (!is_array($keywords)) {
+                $keywords = explode(' ', $keywords);
+            }
+
+            // sort keywords by length desc
+            uasort($keywords, function ($a, $b) {
+                return mb_strlen($a) < mb_strlen($b);
+            });
+
+            $min_word_len = $params['min_word_len'];
+            // remove keywords shorter than 'min_word_len' characters
+            $keywords = array_filter($keywords, function ($a) use ($min_word_len) {
+                return mb_strlen($a) >= $min_word_len;
+            });
+
+            // remove duplicates
+            $keywords = array_unique($keywords);
+
+            // truncate to 'max_keywords' keywords
+            $keywords = array_slice($keywords, 0, $params['max_keywords']);
+
+            return $keywords;
+        }
     }
