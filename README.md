@@ -5,7 +5,7 @@ A very simple search engine for Novius OS, based on Behaviours.
 
 Licensed under [MIT License](http://opensource.org/licenses/MIT)
 
-Current version: 0.4
+Current version: 0.5
 
 **Get started**
 
@@ -37,9 +37,18 @@ Configure which models will be searchable for example in your bootstrap.php:
     });
 
     \JayPS\Search\Orm_Behaviour_Searchable::init();
+    \Event::register_function('front.start', function() {
+        // add models you want to use in your search and that are used in your template before your search enhancer
+        // for exemple: noviusos_page::model/page
+
+        \JayPS\Search\Orm_Behaviour_Searchable::init_relations('noviusos_page::model/page');
+    });
+
 
 
 To use the search with find(), simply provide an array of keywords. '*' acts as a joker at the end.
+
+    \JayPS\Search\Orm_Behaviour_Searchable::init_relations();
 
     $pages = \Nos\Page\Model_Page::find('all', array(
         'where' => array(

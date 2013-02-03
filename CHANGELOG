@@ -1,5 +1,9 @@
 JayPS Search CHANGELOG
 
+February 3rd, 2013: version 0.5
+==============================
+*  Add Orm_Behaviour_Searchable::init_relations() to delay the creation of relations
+
 February 2nd, 2013: version 0.4
 ==============================
 * Migrate application to Novius-OS 0.2
