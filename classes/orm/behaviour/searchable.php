@@ -50,7 +50,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         }
     }
 
-    protected static function add_relations(&$config, $primary_key) {
+    public static function add_relations(&$config, $primary_key) {
         $has_many = array(
             'key_from'       => $primary_key,
             'model_to'       => 'JayPS\Search\Model_Keyword',
