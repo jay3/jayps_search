@@ -5,7 +5,7 @@ A very simple search engine for Novius OS, based on Behaviours.
 
 Licensed under [MIT License](http://opensource.org/licenses/MIT)
 
-Current version: 0.5
+Current version: 0.6
 
 **Get started**
 
@@ -34,14 +34,24 @@ Configure which models will be searchable for example in your bootstrap.php:
                 'fields' => array('page_title', 'wysiwyg_content'),
             ),
         );
+
+        $config['observed_models']['noviusos_news::model/post'] = array(
+            'primary_key' => 'post_id',
+            'config_behaviour' => array(
+                'fields' => array('post_title', 'wysiwyg_content'),
+            ),
+        );
     });
 
     \JayPS\Search\Orm_Behaviour_Searchable::init();
     \Event::register_function('front.start', function() {
         // add models you want to use in your search and that are used in your template before your search enhancer
-        // for exemple: noviusos_page::model/page
+        // for example: noviusos_page::model/page
 
-        \JayPS\Search\Orm_Behaviour_Searchable::init_relations('noviusos_page::model/page');
+        //\JayPS\Search\Orm_Behaviour_Searchable::init_relations('noviusos_page::model/page');
+        //\JayPS\Search\Orm_Behaviour_Searchable::init_relations('noviusos_news::model/post');
+
+        \JayPS\Search\Orm_Behaviour_Searchable::init_relations();
     });
 
 
@@ -53,14 +63,28 @@ To use the search with find(), simply provide an array of keywords. '*' acts as 
     $pages = \Nos\Page\Model_Page::find('all', array(
         'where' => array(
             array('keywords', 'chimpa* monkey'),
+            'page_published' => 1,
+            'page_context'   => \Nos\Nos::main_controller()->getPage()->page_context,
         ),
         'rows_limit' => 10,
         'order_by' => array('jayps_search_score', 'page_title'),
     ));
 
+    $news = \Nos\BlogNews\News\Model_Post::find('all', array(
+        'where' => array(
+            array('keywords', 'chimpa* monkey'),
+            'post_published' => 1,
+            'post_context'   => \Nos\Nos::main_controller()->getPage()->page_context,
+        ),
+        'rows_limit' => 10,
+        'order_by'   => array('jayps_search_score', 'post_title'),
+    ));
+
     $monkeys = \Nos\Monkey\Model_Monkey::find('all', array(
         'where' => array(
             array('keywords', 'chimpa* monkey'),
+            'monk_published' => 1,
+            'monk_context'   => \Nos\Nos::main_controller()->getPage()->page_context,
         ),
         'rows_limit' => 200,
         'order_by' => array('jayps_search_score', 'monk_name'),
