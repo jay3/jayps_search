@@ -10,8 +10,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
     public static function init($add_relations = false)
     {
-        \Config::load('jayps_search::config', 'config');
-        static::$_config = \Config::get('config');
+        static::$_config = \Config::load('jayps_search::config', true);
 
         if (!empty(static::$_config['observed_models']) && is_array(static::$_config['observed_models'])) {
             foreach(static::$_config['observed_models'] as $name => $data) {

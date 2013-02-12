@@ -25,9 +25,6 @@ namespace JayPS\Search;
                 'insert_delayed'        => false,
             );
 
-            //\Config::load('jayps_search::config', 'config');
-
-
             $this->config = array_merge($default_config, $config);
 
             //self::Log($this->config);
