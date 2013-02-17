@@ -13,7 +13,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         static::$_config = \Config::load('jayps_search::config', true);
 
         if (!empty(static::$_config['observed_models']) && is_array(static::$_config['observed_models'])) {
-            foreach(static::$_config['observed_models'] as $name => $data) {
+            foreach (static::$_config['observed_models'] as $name => $data) {
 
                 \Event::register_function('config|'.$name, function(&$config) use ($data, $add_relations) {
                     $config['behaviours']['JayPS\Search\Orm_Behaviour_Searchable'] = $data['config_behaviour'];
@@ -27,7 +27,8 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         }
     }
 
-    public static function init_relations($config_name = '') {
+    public static function init_relations($config_name = '')
+    {
         if ($config_name) {
             // add relations to a specific model
             if (!empty(static::$_config['observed_models'][$config_name])) {
@@ -39,7 +40,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         } else {
             // add relations to every observed models
             if (!empty(static::$_config['observed_models']) && is_array(static::$_config['observed_models'])) {
-                foreach(static::$_config['observed_models'] as $name => $data) {
+                foreach (static::$_config['observed_models'] as $name => $data) {
 
                     \Event::register_function('config|'.$name, function(&$config) use ($data) {
                         \JayPS\Search\Orm_Behaviour_Searchable::add_relations($config, $data['primary_key']);
@@ -49,7 +50,8 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         }
     }
 
-    public static function add_relations(&$config, $primary_key) {
+    public static function add_relations(&$config, $primary_key)
+    {
         $has_many = array(
             'key_from'       => $primary_key,
             'model_to'       => 'JayPS\Search\Model_Keyword',
@@ -57,7 +59,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             'cascade_save'   => false,
             'cascade_delete' => false,
         );
-        for($i = 1; $i <= static::$_config['max_join']; $i++) {
+        for ($i = 1; $i <= static::$_config['max_join']; $i++) {
             $config['has_many']['jayps_search_word_occurence'.$i] = $has_many;
         }
     }
@@ -70,7 +72,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
             $res = array();
             $res[$config['table_primary_key']] = $item->id;
-            foreach($this->_properties['fields'] as $field) {
+            foreach ($this->_properties['fields'] as $field) {
                 if (mb_strpos($field, 'wysiwyg_') === 0) {
                     $wysiwyg = str_replace('wysiwyg_', '', $field);
                     $res[$field] = $item->wysiwygs->{$wysiwyg};
@@ -130,7 +132,8 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     }
 
 
-    private function d($o) {
+    private function d($o)
+    {
         if (!empty($this->_properties['debug']) || !empty(static::$_config['debug'])) {
             print('<pre style="border:1px solid #0000FF; background-color: #CCCCFF; width:95%; height: auto; overflow: auto">');
             print_r($o);
