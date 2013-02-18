@@ -31,7 +31,7 @@ Configure which models will be searchable for example in your bootstrap.php:
         $config['observed_models']['noviusos_page::model/page'] = array(
             'primary_key' => 'page_id',
             'config_behaviour' => array(
-                'fields' => array('page_title', 'wysiwygs->content'),
+                'fields' => array('page_title', 'wysiwygs->content', 'page_meta_title', 'page_meta_description', 'page_meta_keywords'),
             ),
         );
 
