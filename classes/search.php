@@ -78,6 +78,12 @@ class Search
         \Db::query($sql)->execute();
     }
 
+    public static function split_string($txt)
+    {
+        // split the text with punctuations and spaces
+        // include " ", \r, \t, \n et \f
+        return preg_split("/[\s,'`’\"\(\)\.:;!\?*%-]+/", $txt);
+    }
 
     /** @brief coupe une chaîne en mots
      *
@@ -95,9 +101,7 @@ class Search
         }
         //if (count($scores)) d($scores);
 
-        // scinde la phrase grâce aux virgules et espacements
-        // inclus les " ", \r, \t, \n et \f
-        $words = preg_split("/[\s,'`�\"\(\)\.:;!\?*%-]+/", $txt);
+        $words = self::split_string($txt);
 
         $i = 0;
         foreach ($words as $word) {
@@ -183,7 +187,7 @@ class Search
         $params = array_merge($default_params, $params);
 
         if (!is_array($keywords)) {
-            $keywords = explode(' ', $keywords);
+            $keywords = self::split_string($keywords);
         }
 
         // sort keywords by length desc
@@ -205,4 +209,5 @@ class Search
 
         return $keywords;
     }
+
 }
