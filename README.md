@@ -24,21 +24,21 @@ Configure which models will be searchable for example in your bootstrap.php:
         $config['observed_models']['noviusos_monkey::model/monkey'] = array(
             'primary_key' => 'monk_id',
             'config_behaviour' => array(
-                'fields' => array('monk_name', 'monk_summary', 'wysiwyg_content'),
+                'fields' => array('monk_name', 'monk_summary', 'wysiwygs->content'),
             ),
         );
 
         $config['observed_models']['noviusos_page::model/page'] = array(
             'primary_key' => 'page_id',
             'config_behaviour' => array(
-                'fields' => array('page_title', 'wysiwyg_content'),
+                'fields' => array('page_title', 'wysiwygs->content'),
             ),
         );
 
         $config['observed_models']['noviusos_news::model/post'] = array(
             'primary_key' => 'post_id',
             'config_behaviour' => array(
-                'fields' => array('post_title', 'wysiwyg_content'),
+                'fields' => array('post_title', 'wysiwygs->content'),
             ),
         );
     });

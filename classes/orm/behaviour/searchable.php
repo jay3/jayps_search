@@ -73,9 +73,17 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             $res = array();
             $res[$config['table_primary_key']] = $item->id;
             foreach ($this->_properties['fields'] as $field) {
-                if (mb_strpos($field, 'wysiwyg_') === 0) {
-                    $wysiwyg = str_replace('wysiwyg_', '', $field);
-                    $res[$field] = $item->wysiwygs->{$wysiwyg};
+                if (strpos($field, 'wysiwyg_') === 0) {
+                    // backward compatibility
+                    $field = preg_replace('/^wysiwyg_/', 'wysiwygs->', $field);
+                }
+                $arr_name = explode('->', $field);
+                if (count($arr_name) > 1) {
+                    $res[$field] = $item;
+                    foreach ($arr_name as $name) {
+                        $res[$field] = $res[$field]->{$name};
+
+                    }
                 } else {
                     $res[$field] = $item->{$field};
                 }

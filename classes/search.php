@@ -54,8 +54,11 @@ class Search
         $this->remove_from_index($primary_key);
 
         foreach ($this->config['table_fields_to_index'] as $field) {
-
             if (strpos($field, 'wysiwyg_') === 0) {
+                // backward compatibility
+                $field = preg_replace('/^wysiwyg_/', 'wysiwygs->', $field);
+            }
+            if (strpos($field, 'wysiwygs->') === 0) {
                 // it contains HTML tags
                 $scores = $this->split($res[$field], true);
             } else {
