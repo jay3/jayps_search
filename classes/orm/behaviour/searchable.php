@@ -66,6 +66,18 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
     public function after_save(\Nos\Orm\Model $item)
     {
+        self::__index($item);
+    }
+    public function before_save(\Nos\Orm\Model $item)
+    {
+        /** @todo save $item->get_diff somewhere to use it in after_save() and save time if there is no changes */
+    }
+    public function force_reindex(\Nos\Orm\Model $item)
+    {
+        self::__index($item);
+    }
+    private function __index(\Nos\Orm\Model $item)
+    {
         if (!empty($this->_properties['fields'])) {
 
             $config = $this->get_config($item);
@@ -92,11 +104,6 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             $search = new Search($config);
             $search->add_to_index($res);
         }
-    }
-
-    public function before_save(\Nos\Orm\Model $item)
-    {
-        /** @todo save $item->get_diff somewhere to use it in after_save() and save time if there is no changes */
     }
 
     public function before_delete(\Nos\Orm\Model $item)
