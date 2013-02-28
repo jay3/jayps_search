@@ -89,20 +89,49 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                     // backward compatibility
                     $field = preg_replace('/^wysiwyg_/', 'wysiwygs->', $field);
                 }
-                $arr_name = explode('->', $field);
-                if (count($arr_name) > 1) {
+                if (strpos($field, '->') > 0) {
+                    // a property of a relation of the model
+                    $arr_names = explode('->', $field);
                     $res[$field] = $item;
-                    foreach ($arr_name as $name) {
-                        $res[$field] = $res[$field]->{$name};
-
-                    }
+                    self::__build_pseudo_fields($res, $field, $arr_names);
                 } else {
+                    // a simple property
                     $res[$field] = $item->{$field};
                 }
             }
 
             $search = new Search($config);
             $search->add_to_index($res);
+        }
+    }
+    private static function __build_pseudo_fields(&$res, $field, $arr_names) {
+
+        if (count($arr_names) == 0) {
+            // last level of recursion
+            return;
+        }
+
+        // remove first name
+        $name = array_shift($arr_names);
+
+        if (isset($res[$field]->{$name})) {
+            if (is_array($res[$field]->{$name})) {
+                // example: _many_many
+                $tmp = '';
+                foreach($res[$field]->{$name} as $relation) {
+                    $res[$field] = $relation;
+                    self::__build_pseudo_fields($res, $field, $arr_names);
+                    $tmp .= ($tmp ? ' ' : '') . $res[$field];
+                }
+                $res[$field] = $tmp;
+            } else {
+                $res[$field] = $res[$field]->{$name};
+                self::__build_pseudo_fields($res, $field, $arr_names);
+            }
+        } else {
+            // the relation does not exist for the current item
+            // we do not go deeper in the chain '->'
+            $res[$field] = '';
         }
     }
 

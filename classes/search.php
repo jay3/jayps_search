@@ -58,7 +58,7 @@ class Search
                 // backward compatibility
                 $field = preg_replace('/^wysiwyg_/', 'wysiwygs->', $field);
             }
-            if (strpos($field, 'wysiwygs->') === 0) {
+            if (strpos($field, 'wysiwygs->') !== false) {
                 // it contains HTML tags
                 $scores = $this->split($res[$field], true);
             } else {
