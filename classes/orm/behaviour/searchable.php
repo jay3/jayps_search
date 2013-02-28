@@ -104,7 +104,8 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             $search->add_to_index($res);
         }
     }
-    private static function __build_pseudo_fields(&$res, $field, $arr_names) {
+    private static function __build_pseudo_fields(&$res, $field, $arr_names)
+    {
 
         if (count($arr_names) == 0) {
             // last level of recursion
@@ -118,7 +119,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             if (is_array($res[$field]->{$name})) {
                 // example: _many_many
                 $tmp = '';
-                foreach($res[$field]->{$name} as $relation) {
+                foreach ($res[$field]->{$name} as $relation) {
                     $res[$field] = $relation;
                     self::__build_pseudo_fields($res, $field, $arr_names);
                     $tmp .= ($tmp ? ' ' : '') . $res[$field];
