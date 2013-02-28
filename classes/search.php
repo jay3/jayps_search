@@ -78,11 +78,25 @@ class Search
         \Db::query($sql)->execute();
     }
 
-    public static function split_string($txt)
+    private static function split_string($txt, $params = array())
     {
+        $default_params = array(
+            'allowable_chars' => '', // to allow specific characters, example '*' for the search
+        );
+        $params = array_merge($default_params, $params);
+
         // split the text with punctuations and spaces
         // include " ", \r, \t, \n et \f
-        return preg_split("/[\s,'`’\"\(\)\.:;!\?*%-]+/", $txt);
+        $regex = "/[\s,'`’\"\(\)\.:;!\?*%-]+/";
+
+        if (!empty($params['allowable_chars'])) {
+            // remove specific characters form the regex
+            foreach (str_split($params['allowable_chars']) as $char) {
+                $regex = str_replace(array('\\'.$char, $char), array('', ''), $regex);
+            }
+        }
+
+        return preg_split($regex, $txt);
     }
 
     /** @brief coupe une chaîne en mots
@@ -187,7 +201,7 @@ class Search
         $params = array_merge($default_params, $params);
 
         if (!is_array($keywords)) {
-            $keywords = self::split_string($keywords);
+            $keywords = self::split_string($keywords, array('allowable_chars' => '*?'));
         }
 
         // sort keywords by length desc
