@@ -211,20 +211,27 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
                         //self::d($keywords);
 
-                        // $keywords has been modified, so keys are 0, 1, 2...
-                        foreach ($keywords as $i => $keyword) {
-                            $keyword = str_replace('%', '', $keyword);
-                            if (mb_strpos($keyword, '*') !== false) {
-                                $keyword = str_replace('*', '', $keyword) . '%';
-                                $operator = 'LIKE';
-                            } else {
-                                $operator = '=';
+                        if (count($keywords) > 0) {
+                            // $keywords has been modified, so keys are 0, 1, 2...
+                            foreach ($keywords as $i => $keyword) {
+                                $keyword = str_replace('%', '', $keyword);
+                                if (mb_strpos($keyword, '*') !== false) {
+                                    $keyword = str_replace('*', '', $keyword) . '%';
+                                    $operator = 'LIKE';
+                                } else {
+                                    $operator = '=';
+                                }
+                                $where[] = array(
+                                    array(static::$_config['table_liaison'] . ($i+1) . '.mooc_word', $operator,  $keyword),
+                                    array(static::$_config['table_liaison'] . ($i+1) . '.mooc_join_table', $table)
+                                );
+                                $options['related'][] = static::$_config['table_liaison'].($i+1);
                             }
-                            $where[] = array(
-                                array(static::$_config['table_liaison'] . ($i+1) . '.mooc_word', $operator,  $keyword),
-                                array(static::$_config['table_liaison'] . ($i+1) . '.mooc_join_table', $table)
-                            );
-                            $options['related'][] = static::$_config['table_liaison'].($i+1);
+                        } else {
+                            // all keywords provided where removed (possible raison: too short)
+                            // add an impossible case to return zero results
+                            $pk = $class::primary_key();
+                            $where[] = array(array($pk[0], '!=', \Db::expr($pk[0])));
                         }
                         $options['group_by'] = self::get_first_primary_key($class);
                     }
