@@ -252,6 +252,9 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                                 $order = 'ASC';
                             }
                             $order_by[$k_ob] = array(\DB::expr($sql_expr), $order);
+                        } else {
+                            // no keywords used, remove the order_by 'jayps_search_score'
+                            unset($order_by[$k_ob]);
                         }
                     }
                 }
