@@ -191,6 +191,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         if (array_key_exists('where', $options)) {
             $where = $options['where'];
             $keywords = array();
+            $nb_relations_ini = is_array($options['related']) ? count($options['related']) : 0;
 
             foreach ($where as $k => $w) {
 
@@ -251,7 +252,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                                 if ($sql_expr) {
                                     $sql_expr .= '+';
                                 }
-                                $sql_expr .= 'SUM(t'.$i.'.mooc_score)';
+                                $sql_expr .= 'SUM(t'.($nb_relations_ini + $i).'.mooc_score)';
                             }
                             $sql_expr = '(' . $sql_expr . ')';
                             $order = 'DESC';
