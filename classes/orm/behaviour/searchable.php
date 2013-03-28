@@ -191,7 +191,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         if (array_key_exists('where', $options)) {
             $where = $options['where'];
             $keywords = array();
-            $nb_relations_ini = is_array($options['related']) ? count($options['related']) : 0;
+            $nb_relations_ini = isset($options['related']) && is_array($options['related']) ? count($options['related']) : 0;
 
             foreach ($where as $k => $w) {
 
