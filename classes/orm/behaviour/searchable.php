@@ -102,6 +102,14 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
             $search = new Search($config);
             $search->add_to_index($res);
+
+            if (isset($this->_properties['field_date_indexation']) && $this->_properties['field_date_indexation']) {
+                $sql  = "UPDATE " . $config['table'];
+                $sql .= " SET " . $this->_properties['field_date_indexation'] . " = NOW() ";
+                $sql .= " WHERE " . $config['table_primary_key'] . " = " . $item->id;
+                \DB::query($sql)->execute();
+            }
+
         }
     }
     private static function __build_pseudo_fields(&$res, $field, $arr_names)
