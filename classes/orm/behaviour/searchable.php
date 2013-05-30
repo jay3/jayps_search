@@ -200,7 +200,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             $where = $options['where'];
             $keywords = array();
             $nb_relations_ini = isset($options['related']) && is_array($options['related']) ? count($options['related']) : 0;
-            $query_count = isset($options['jayps_search_count']) && $options['jayps_search_count'];
+            $group_by = !(isset($options['jayps_no_group_by']) && $options['jayps_no_group_by']);
 
             foreach ($where as $k => $w) {
 
@@ -244,7 +244,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                             $pk = $class::primary_key();
                             $where[] = array(array($pk[0], '!=', \Db::expr($pk[0])));
                         }
-                        if (!$query_count) {
+                        if ($group_by) {
                             $options['group_by'] = 't0.' . self::get_first_primary_key($class);
                         }
                     }
