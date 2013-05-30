@@ -245,7 +245,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                             $where[] = array(array($pk[0], '!=', \Db::expr($pk[0])));
                         }
                         if (!$query_count) {
-                            $options['group_by'] = self::get_first_primary_key($class);
+                            $options['group_by'] = 't0.' . self::get_first_primary_key($class);
                         }
                     }
                     unset($where[$k]);
