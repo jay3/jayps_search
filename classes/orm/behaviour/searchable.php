@@ -241,8 +241,9 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                         } else {
                             // all keywords provided where removed (possible raison: too short)
                             // add an impossible case to return zero results
+                            // Note: a better solution should returns 1=0, but the ORM doesn't understand it
                             $pk = $class::primary_key();
-                            $where[] = array(array($pk[0], '!=', \Db::expr($pk[0])));
+                            $where[] = array(array($pk[0], '!=', \Db::expr('t0.'.$pk[0])));
                         }
                         if ($group_by) {
                             $options['group_by'] = 't0.' . self::get_first_primary_key($class);
