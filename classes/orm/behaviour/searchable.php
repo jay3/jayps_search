@@ -6,14 +6,14 @@ namespace JayPS\Search;
 
 class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 {
-    protected static $_config = array();
+    protected static $_jaypssearch_config = array();
 
     public static function init($add_relations = false)
     {
-        static::$_config = \Config::load('jayps_search::config', true);
+        static::$_jaypssearch_config = \Config::load('jayps_search::config', true);
 
-        if (!empty(static::$_config['observed_models']) && is_array(static::$_config['observed_models'])) {
-            foreach (static::$_config['observed_models'] as $name => $data) {
+        if (!empty(static::$_jaypssearch_config['observed_models']) && is_array(static::$_jaypssearch_config['observed_models'])) {
+            foreach (static::$_jaypssearch_config['observed_models'] as $name => $data) {
 
                 \Event::register_function('config|'.$name, function(&$config) use ($data, $add_relations) {
                     $config['behaviours']['JayPS\Search\Orm_Behaviour_Searchable'] = $data['config_behaviour'];
@@ -31,16 +31,16 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     {
         if ($config_name) {
             // add relations to a specific model
-            if (!empty(static::$_config['observed_models'][$config_name])) {
-                $data = static::$_config['observed_models'][$config_name];
+            if (!empty(static::$_jaypssearch_config['observed_models'][$config_name])) {
+                $data = static::$_jaypssearch_config['observed_models'][$config_name];
                 \Event::register_function('config|'.$config_name, function(&$config) use ($data) {
                     \JayPS\Search\Orm_Behaviour_Searchable::add_relations($config, $data['primary_key']);
                 });
             }
         } else {
             // add relations to every observed models
-            if (!empty(static::$_config['observed_models']) && is_array(static::$_config['observed_models'])) {
-                foreach (static::$_config['observed_models'] as $name => $data) {
+            if (!empty(static::$_jaypssearch_config['observed_models']) && is_array(static::$_jaypssearch_config['observed_models'])) {
+                foreach (static::$_jaypssearch_config['observed_models'] as $name => $data) {
 
                     \Event::register_function('config|'.$name, function(&$config) use ($data) {
                         \JayPS\Search\Orm_Behaviour_Searchable::add_relations($config, $data['primary_key']);
@@ -59,7 +59,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             'cascade_save'   => false,
             'cascade_delete' => false,
         );
-        for ($i = 1; $i <= static::$_config['max_join']; $i++) {
+        for ($i = 1; $i <= static::$_jaypssearch_config['max_join']; $i++) {
             $config['has_many']['jayps_search_word_occurence'.$i] = $has_many;
         }
     }
@@ -159,7 +159,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             'table_fields_to_index'     => $this->_properties['fields'],
         );
 
-        $config = array_merge(static::$_config, $config);
+        $config = array_merge(static::$_jaypssearch_config, $config);
 
         if (isset($this->_properties['debug'])) {
             // if the propertie 'debug' is set in the configuration of the behaviour, we use it
@@ -187,7 +187,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
     private function d($o)
     {
-        if (!empty($this->_properties['debug']) || !empty(static::$_config['debug'])) {
+        if (!empty($this->_properties['debug']) || !empty(static::$_jaypssearch_config['debug'])) {
             print('<pre style="border:1px solid #0000FF; background-color: #CCCCFF; width:95%; height: auto; overflow: auto">');
             print_r($o);
             print('</pre>');
@@ -216,8 +216,8 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                     if (!empty($keywords)) {
 
                         $keywords = Search::generate_keywords($keywords, array(
-                            'min_word_len' => static::$_config['min_word_len'],
-                            'max_keywords' => static::$_config['max_join'],
+                            'min_word_len' => static::$_jaypssearch_config['min_word_len'],
+                            'max_keywords' => static::$_jaypssearch_config['max_join'],
                         ));
 
                         //self::d($keywords);
@@ -233,10 +233,10 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                                     $operator = '=';
                                 }
                                 $where[] = array(
-                                    array(static::$_config['table_liaison'] . ($i+1) . '.mooc_word', $operator,  $keyword),
-                                    array(static::$_config['table_liaison'] . ($i+1) . '.mooc_join_table', $table)
+                                    array(static::$_jaypssearch_config['table_liaison'] . ($i+1) . '.mooc_word', $operator,  $keyword),
+                                    array(static::$_jaypssearch_config['table_liaison'] . ($i+1) . '.mooc_join_table', $table)
                                 );
-                                $options['related'][] = static::$_config['table_liaison'].($i+1);
+                                $options['related'][] = static::$_jaypssearch_config['table_liaison'].($i+1);
                             }
                         } else {
                             // all keywords provided where removed (possible raison: too short)
