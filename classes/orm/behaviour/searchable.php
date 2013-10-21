@@ -194,64 +194,78 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         }
     }
 
+    protected function _search_keywords(&$where, &$options) {
+
+        $found = 0;
+        if ($this->_class == 'Nos\Catalogue\Model_Product') {
+            $toto = '';
+        }
+        foreach ($where as $k => $w) {
+
+            if ($w[0] == 'keywords') {
+
+                //self::d('before_query');
+                //self::d($w);
+
+                $class = $this->_class;
+                $table = $class::table();
+
+                $keywords = $w[1];
+                if (!empty($keywords)) {
+
+                    $keywords = Search::generate_keywords($keywords, array(
+                        'min_word_len' => static::$_jaypssearch_config['min_word_len'],
+                        'max_keywords' => static::$_jaypssearch_config['max_join'],
+                    ));
+
+                    //self::d($keywords);
+                    $found = count($keywords);
+                    if ($found > 0) {
+                        // $keywords has been modified, so keys are 0, 1, 2...
+                        foreach ($keywords as $i => $keyword) {
+                            $keyword = str_replace('%', '', $keyword);
+                            if (mb_strpos($keyword, '*') !== false) {
+                                $keyword = str_replace('*', '', $keyword) . '%';
+                                $operator = 'LIKE';
+                            } else {
+                                $operator = '=';
+                            }
+                            //replace where clause by the search conditions
+                            $where[$k] = array(
+                                array(static::$_jaypssearch_config['table_liaison'] . ($i+1) . '.mooc_word', $operator,  $keyword),
+                                array(static::$_jaypssearch_config['table_liaison'] . ($i+1) . '.mooc_join_table', $table)
+                            );
+                            $options['related'][] = static::$_jaypssearch_config['table_liaison'].($i+1);
+                        }
+                    } else {
+                        // all keywords provided where removed (possible raison: too short)
+                        // add an impossible case to return zero results and replace the keyword clause
+                        // Note: a better solution should returns 1=0, but the ORM doesn't understand it
+                        $pk = $class::primary_key();
+                        $where[$k] = array(array($pk[0], '!=', \Db::expr('t0.'.$pk[0])));
+                    }
+                }
+            } elseif (is_array($w[0])) {
+                $found += $this->_search_keywords($where[$k], $options);
+            }
+        }
+        return $found;
+    }
+
     public function before_query(&$options)
     {
         if (array_key_exists('where', $options)) {
             $where = $options['where'];
-            $keywords = array();
             $nb_relations_ini = isset($options['related']) && is_array($options['related']) ? count($options['related']) : 0;
             $group_by = !(isset($options['jayps_no_group_by']) && $options['jayps_no_group_by']);
 
-            foreach ($where as $k => $w) {
+            $found = $this->_search_keywords($where, $options);
 
-                if ($w[0] == 'keywords') {
-
-                    //self::d('before_query');
-                    //self::d($w);
-
-                    $class = $this->_class;
-                    $table = $class::table();
-
-                    $keywords = $w[1];
-                    if (!empty($keywords)) {
-
-                        $keywords = Search::generate_keywords($keywords, array(
-                            'min_word_len' => static::$_jaypssearch_config['min_word_len'],
-                            'max_keywords' => static::$_jaypssearch_config['max_join'],
-                        ));
-
-                        //self::d($keywords);
-
-                        if (count($keywords) > 0) {
-                            // $keywords has been modified, so keys are 0, 1, 2...
-                            foreach ($keywords as $i => $keyword) {
-                                $keyword = str_replace('%', '', $keyword);
-                                if (mb_strpos($keyword, '*') !== false) {
-                                    $keyword = str_replace('*', '', $keyword) . '%';
-                                    $operator = 'LIKE';
-                                } else {
-                                    $operator = '=';
-                                }
-                                $where[] = array(
-                                    array(static::$_jaypssearch_config['table_liaison'] . ($i+1) . '.mooc_word', $operator,  $keyword),
-                                    array(static::$_jaypssearch_config['table_liaison'] . ($i+1) . '.mooc_join_table', $table)
-                                );
-                                $options['related'][] = static::$_jaypssearch_config['table_liaison'].($i+1);
-                            }
-                        } else {
-                            // all keywords provided where removed (possible raison: too short)
-                            // add an impossible case to return zero results
-                            // Note: a better solution should returns 1=0, but the ORM doesn't understand it
-                            $pk = $class::primary_key();
-                            $where[] = array(array($pk[0], '!=', \Db::expr('t0.'.$pk[0])));
-                        }
-                        if ($group_by) {
-                            $options['group_by'] = 't0.' . self::get_first_primary_key($class);
-                        }
-                    }
-                    unset($where[$k]);
-                }
+            if ($group_by && $found) {
+                $class = $this->_class;
+                $options['group_by'] = 't0.' . self::get_first_primary_key($class);
             }
+
             $options['where'] = $where;
             if (!empty($options['order_by'])) {
                 //self::d($options['order_by']);
@@ -259,9 +273,9 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
                 foreach ($order_by as $k_ob => $v_ob) {
                     if (in_array('jayps_search_score', (array) $v_ob)) {
-                        if (count($keywords) > 0) {
+                        if ($found > 0) {
                             $sql_expr = '';
-                            for ($i = 1; $i <= count($keywords); $i++) {
+                            for ($i = 1; $i <= $found; $i++) {
                                 if ($sql_expr) {
                                     $sql_expr .= '+';
                                 }
