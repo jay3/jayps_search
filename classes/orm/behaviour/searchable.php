@@ -218,6 +218,8 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                     //self::d($keywords);
                     $found = count($keywords);
                     if ($found > 0) {
+                        //erase $where[$k] in a clean way before setting it
+                        $where[$k] = array();
                         // $keywords has been modified, so keys are 0, 1, 2...
                         foreach ($keywords as $i => $keyword) {
                             $keyword = str_replace('%', '', $keyword);
@@ -234,7 +236,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                             );
                             //in cas there is more than 1 keyword, ensure an it's an AND between them by adding another level with an array
                             if ($found > 1) {
-                                $where[$k][$i] = $clause;
+                                $where[$k][] = $clause;
                             } else {
                                 $where[$k] = $clause;
                             }
