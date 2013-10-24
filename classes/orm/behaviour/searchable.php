@@ -197,9 +197,6 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     protected function _search_keywords(&$where, &$options) {
 
         $found = 0;
-        if ($this->_class == 'Nos\Catalogue\Model_Product') {
-            $toto = '';
-        }
         foreach ($where as $k => $w) {
 
             if ($w[0] == 'keywords') {
