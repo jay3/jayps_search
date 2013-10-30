@@ -9,7 +9,6 @@ Current version: 0.6
 
 **Get started**
 
-* Execute the MySQL script jayps_search/create_tables.sql in your Novius OS database.
 * Configure which models will be searchable in your bootstrap.php (see below).
  For examples, see [JayPS Search Test](https://github.com/jay3/jayps_search_test)
 * Add new items or save existing ones
