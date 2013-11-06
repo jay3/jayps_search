@@ -5,7 +5,7 @@ A very simple search engine for Novius OS, based on Behaviours.
 
 Licensed under [MIT License](http://opensource.org/licenses/MIT)
 
-Current version: 0.6
+Current version: 1.0
 
 **Get started**
 

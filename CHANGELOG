@@ -1,5 +1,26 @@
 JayPS Search CHANGELOG
 
+November 6th, 2013: version 1.0
+==============================
+* Now support 'relation->field' syntax to index fields from relations (has_one, has_many, many_many and belongs_to)
+* Add method force_reindex() on observed model to force its indexation
+* Prevent errors with order_by if no keywords is used during search
+* During a search, if all provided keywords are ignored (example: too shorts), return no results
+* Bugfix: jayps_search_score + multiple relations
+* Add option 'jayps_no_group_by' to be able to use Model::query()->count()
+* Add property 'field_date_indexation' in behaviour configuration
+* Compability with Novius-OS Chiba 2
+* Check for "keywords" in complexe "where" clauses
+* Novius-OS migration to create the table
+* Support for multiple 'keywords' fields in where clause
+* Add option 'jayps_search_exact_match' to order results with exact matches first (search with joker '*')
+
+Thanks to Victor Albert and Pascal Viney
+
+February 12th, 2013: version 0.6
+==============================
+* PHP 5.3 compatibility
+
 February 3rd, 2013: version 0.5
 ==============================
 *  Add Orm_Behaviour_Searchable::init_relations() to delay the creation of relations
