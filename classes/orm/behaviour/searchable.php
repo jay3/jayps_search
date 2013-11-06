@@ -280,6 +280,30 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                 $order_by = (array) $options['order_by'];
 
                 foreach ($order_by as $k_ob => $v_ob) {
+                    if (in_array('jayps_search_exact_match', (array) $v_ob)) {
+                        $sql_expr = '';
+                        for ($i = 0; $i < count($keywords); $i++) {
+                            $keyword = str_replace('%', '', $keywords[$i]);
+                            if (mb_strpos($keyword, '*') !== false) {
+                                $keyword = str_replace('*', '', $keyword);
+                                if ($sql_expr) {
+                                    $sql_expr .= '+';
+                                }
+                                $sql_expr .= 'IF(t'.($nb_relations_ini + $i + 1).'.mooc_word='.\DB::quote($keyword).',1,0)';
+                            }
+                        }
+                        if ($sql_expr != '') {
+                            $sql_expr = '(' . $sql_expr . ')';
+                            $order = 'DESC';
+                            if (is_array($v_ob) && ($v_ob[1] == 'ASC')) {
+                                $order = 'ASC';
+                            }
+                            $order_by[$k_ob] = array(\DB::expr($sql_expr), $order);
+                        } else {
+                            // no keywords used, remove the order_by 'jayps_search_exact_match'
+                            unset($order_by[$k_ob]);
+                        }
+                    }
                     if (in_array('jayps_search_score', (array) $v_ob)) {
                         if (count($keywords) > 0) {
                             $sql_expr = '';
