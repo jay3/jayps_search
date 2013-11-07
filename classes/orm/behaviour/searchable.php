@@ -263,7 +263,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     {
         if (array_key_exists('where', $options)) {
             $where = $options['where'];
-            $nb_relations_ini = isset($options['related']) && is_array($options['related']) ? count($options['related']) : 0;
+            $nb_relations_ini = isset($options['related']) && is_array($options['related']) ? count(array_unique($options['related'])) : 0;
             $group_by = !(isset($options['jayps_no_group_by']) && $options['jayps_no_group_by']);
 
             $keywords = array();
