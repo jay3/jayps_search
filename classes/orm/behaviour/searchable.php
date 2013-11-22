@@ -271,7 +271,8 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
             if ($group_by && count($keywords) > 0) {
                 $class = $this->_class;
-                $options['group_by'] = 't0.' . self::get_first_primary_key($class);
+                $options['group_by'] = (array) $options['group_by'];
+                $options['group_by'][] = 't0.' . self::get_first_primary_key($class);
             }
 
             $options['where'] = $where;
