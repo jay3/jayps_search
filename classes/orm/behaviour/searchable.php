@@ -197,64 +197,65 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     protected function _search_keywords(&$where, &$options, &$used_keywords) {
 
         foreach ($where as $k => $w) {
+            if (is_array($w) && isset($w[0])) {
+                if ($w[0] == 'keywords') {
 
-            if ($w[0] == 'keywords') {
+                    //self::d('before_query');
+                    //self::d($w);
 
-                //self::d('before_query');
-                //self::d($w);
+                    $class = $this->_class;
+                    $table = $class::table();
 
-                $class = $this->_class;
-                $table = $class::table();
+                    $keywords = $w[1];
+                    if (!empty($keywords)) {
 
-                $keywords = $w[1];
-                if (!empty($keywords)) {
+                        $keywords = Search::generate_keywords($keywords, array(
+                            'min_word_len' => static::$_jaypssearch_config['min_word_len'],
+                            // note: we remove "used" relations to prevent sql errors
+                            // this could end to "no results"
+                            // increase 'max_join' in your config in you really need to do that
+                            'max_keywords' => static::$_jaypssearch_config['max_join'] - count($used_keywords),
+                        ));
 
-                    $keywords = Search::generate_keywords($keywords, array(
-                        'min_word_len' => static::$_jaypssearch_config['min_word_len'],
-                        // note: we remove "used" relations to prevent sql errors
-                        // this could end to "no results"
-                        // increase 'max_join' in your config in you really need to do that
-                        'max_keywords' => static::$_jaypssearch_config['max_join'] - count($used_keywords),
-                    ));
+                        //self::d($keywords);
+                        if (count($keywords) > 0) {
+                            //erase $where[$k] in a clean way before setting it
+                            $where[$k] = array();
+                            // $keywords has been modified, so keys are 0, 1, 2...
+                            foreach ($keywords as $i => $keyword) {
+                                $keyword = str_replace('%', '', $keyword);
+                                if (mb_strpos($keyword, '*') !== false) {
+                                    $keyword = str_replace('*', '', $keyword) . '%';
+                                    $operator = 'LIKE';
+                                } else {
+                                    $operator = '=';
+                                }
+                                //replace where clause by the search conditions
+                                $clause = array(
+                                    array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i+1) . '.mooc_word', $operator,  $keyword),
+                                    array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i+1) . '.mooc_join_table', $table)
+                                );
+                                //in cas there is more than 1 keyword, ensure an it's an AND between them by adding another level with an array
+                                if (count($keywords) > 1) {
+                                    $where[$k][] = $clause;
+                                } else {
+                                    $where[$k] = $clause;
+                                }
 
-                    //self::d($keywords);
-                    if (count($keywords) > 0) {
-                        //erase $where[$k] in a clean way before setting it
-                        $where[$k] = array();
-                        // $keywords has been modified, so keys are 0, 1, 2...
-                        foreach ($keywords as $i => $keyword) {
-                            $keyword = str_replace('%', '', $keyword);
-                            if (mb_strpos($keyword, '*') !== false) {
-                                $keyword = str_replace('*', '', $keyword) . '%';
-                                $operator = 'LIKE';
-                            } else {
-                                $operator = '=';
+                                $options['related'][] = static::$_jaypssearch_config['table_liaison'].(count($used_keywords)+$i+1);
                             }
-                            //replace where clause by the search conditions
-                            $clause = array(
-                                array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i+1) . '.mooc_word', $operator,  $keyword),
-                                array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i+1) . '.mooc_join_table', $table)
-                            );
-                            //in cas there is more than 1 keyword, ensure an it's an AND between them by adding another level with an array
-                            if (count($keywords) > 1) {
-                                $where[$k][] = $clause;
-                            } else {
-                                $where[$k] = $clause;
-                            }
-
-                            $options['related'][] = static::$_jaypssearch_config['table_liaison'].(count($used_keywords)+$i+1);
+                            $used_keywords = array_merge($used_keywords, $keywords);
+                        } else {
+                            // all keywords provided where removed (possible raison: too short)
+                            // add an impossible case to return zero results and replace the keyword clause
+                            // Note: a better solution should returns 1=0, but the ORM doesn't understand it
+                            $pk = $class::primary_key();
+                            $where[$k] = array(array($pk[0], '!=', \Db::expr('t0.'.$pk[0])));
                         }
-                        $used_keywords = array_merge($used_keywords, $keywords);
-                    } else {
-                        // all keywords provided where removed (possible raison: too short)
-                        // add an impossible case to return zero results and replace the keyword clause
-                        // Note: a better solution should returns 1=0, but the ORM doesn't understand it
-                        $pk = $class::primary_key();
-                        $where[$k] = array(array($pk[0], '!=', \Db::expr('t0.'.$pk[0])));
                     }
+                } elseif (is_array($w[0])) {
+                    $this->_search_keywords($where[$k], $options, $used_keywords);
                 }
-            } elseif (is_array($w[0])) {
-                $this->_search_keywords($where[$k], $options, $used_keywords);
             }
         }
     }
@@ -271,6 +272,9 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
             if ($group_by && count($keywords) > 0) {
                 $class = $this->_class;
+                if (!isset($options['group_by'])) {
+                    $options['group_by'] = array();
+                }
                 $options['group_by'] = (array) $options['group_by'];
                 $options['group_by'][] = 't0.' . self::get_first_primary_key($class);
             }
