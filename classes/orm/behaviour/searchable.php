@@ -260,6 +260,31 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         }
     }
 
+    /**
+     * convert different where syntaxes
+     *
+     * @param $where
+     */
+    protected static function _convert_where_syntax(&$where)
+    {
+        if (is_array($where)) {
+            if (isset($where[0]) && isset($where[1]) && isset($where[2]) && ($where[0] == 'keywords') && ($where[1] == '=')) {
+                // convert syntax array('keywords', '=', $keywords) to syntax array('keywords', $keywords)
+                $where = array($where[0], $where[2]);
+            } else {
+                foreach ($where as $k => $w) {
+                    if (is_string($k) && ($k == 'keywords')) {
+                        // convert syntax 'keywords' => $keywords to syntax array('keywords', $keywords)
+                        $w = array($k, $w);
+                        unset($where[$k]);
+                        $where[] = $w;
+                    } elseif (is_array($w)) {
+                        static::_convert_where_syntax($where[$k]);
+                    }
+                }
+            }
+        }
+    }
     public function before_query(&$options)
     {
         if (array_key_exists('where', $options)) {
@@ -268,6 +293,9 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             $group_by = !(isset($options['jayps_no_group_by']) && $options['jayps_no_group_by']);
 
             $keywords = array();
+
+            static::_convert_where_syntax($where);
+
             $this->_search_keywords($where, $options, $keywords);
 
             if ($group_by && count($keywords) > 0) {
