@@ -106,7 +106,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             if (isset($this->_properties['field_date_indexation']) && $this->_properties['field_date_indexation']) {
                 $sql  = "UPDATE " . $config['table'];
                 $sql .= " SET " . $this->_properties['field_date_indexation'] . " = NOW() ";
-                $sql .= " WHERE " . $config['table_primary_key'] . " = " . $item->id;
+                $sql .= " WHERE " . $config['table_primary_key'] . " = " . \Db::quote($item->id);
                 \DB::query($sql)->execute();
             }
 

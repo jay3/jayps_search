@@ -74,7 +74,7 @@ class Search
         // suppression des mots clés générés précédemment
         $sql  = "DELETE FROM " . $this->config['table_liaison'];
         $sql .= " WHERE " . $this->config['table_liaison_prefixe'] . "join_table = " . \Db::quote($this->config['table']);
-        $sql .= " AND " . $this->config['table_liaison_prefixe'] . "foreign_id = $primary_key";
+        $sql .= " AND " . $this->config['table_liaison_prefixe'] . "foreign_id = " . \Db::quote($primary_key);
         \Db::query($sql)->execute();
     }
 
