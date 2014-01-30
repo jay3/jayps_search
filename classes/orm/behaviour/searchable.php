@@ -68,10 +68,11 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     {
         self::__index($item);
     }
-    public function before_save(\Nos\Orm\Model $item)
-    {
-        /** @todo save $item->get_diff somewhere to use it in after_save() and save time if there is no changes */
-    }
+
+    // public function before_save(\Nos\Orm\Model $item)
+    // Idea: try to use $item->get_diff() and save time if there is no changes
+    // but get_diff() won't return differences on relations...
+
     public function force_reindex(\Nos\Orm\Model $item)
     {
         self::__index($item);

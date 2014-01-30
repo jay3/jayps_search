@@ -51,7 +51,17 @@ class Search
 
         self::log('add_to_index: '.$this->config['table'].':'.$primary_key);
 
-        $this->remove_from_index($primary_key);
+        $old_keywords = $new_keywords = array();
+
+        $sql  = "SELECT * FROM " . $this->config['table_liaison'];
+        $sql .= " WHERE " . $this->config['table_liaison_prefixe'] . "join_table = " . \Db::quote($this->config['table']);
+        $sql .= " AND " . $this->config['table_liaison_prefixe'] . "foreign_id = " . \Db::quote($primary_key);
+        $keywords = \Db::query($sql)->execute()->as_array();
+        if (count($keywords)) {
+            foreach ($keywords as $kw) {
+                $old_keywords[$kw[$this->config['table_liaison_prefixe'] . 'field']][$kw[$this->config['table_liaison_prefixe'] . 'word']] = $kw[$this->config['table_liaison_prefixe'] . 'score'];
+            }
+        }
 
         foreach ($this->config['table_fields_to_index'] as $field) {
             if (strpos($field, 'wysiwyg_') === 0) {
@@ -64,11 +74,44 @@ class Search
             } else {
                 $scores = $this->split($res[$field]);
             }
-            //self::log($scores);
-            self::log(count($scores).' words');
-            $this->insert_keywords($primary_key, $scores, $field);
+            $new_keywords[$field] = $scores;
+        }
+
+        $diff = self::different_keywords($old_keywords, $new_keywords);
+        if ($diff) {
+            $this->remove_from_index($primary_key);
+            foreach ($new_keywords as $field => $scores) {
+                $this->insert_keywords($primary_key, $scores, $field);
+            }
         }
     }
+
+
+    /**
+     * Compare 2 arrays of keywords (fields>keyword>score)
+     *
+     * @return boolean
+     */
+    private static function different_keywords($array1, $array2)
+    {
+        if (count($array1) != count($array2) || count(array_intersect_key($array1, $array2)) != count($array1)) {
+            // not the same keys
+            return true;
+        }
+        foreach ($array1 as $key => $value) {
+            if (count($array1[$key]) != count($array2[$key]) || count(array_intersect_key($array1[$key], $array2[$key])) != count($array1[$key])) {
+                // not the same keys
+                return true;
+            }
+            $diff = array_diff_assoc($array1[$key], $array2[$key]);
+            if (count($diff) != 0) {
+                // not the same values
+                return true;
+            }
+        }
+        return false;
+    }
+
     public function remove_from_index($primary_key)
     {
         // suppression des mots clés générés précédemment
@@ -141,6 +184,9 @@ class Search
         // sort words by score DESC
         arsort($scores);
         //d($scores);
+        $scores = array_map(function ($score) {
+            return intval(10 * $score);
+        }, $scores);
 
         return $scores;
     }
@@ -180,7 +226,7 @@ class Search
                 $sql .= ', ' . \Db::quote($this->config['table']);
                 $sql .= ', ' . \Db::quote($primary_key);
                 $sql .= ', ' . \Db::quote($field);
-                $sql .= ', ' . intval(10 * $score);
+                $sql .= ', ' . intval($score);
                 $sql .= ')';
             }
             self::log($sql);
