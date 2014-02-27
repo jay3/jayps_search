@@ -102,9 +102,8 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
             }
 
             $search = new Search($config);
-            $search->add_to_index($res);
-
-            if (isset($this->_properties['field_date_indexation']) && $this->_properties['field_date_indexation']) {
+            $changed = $search->add_to_index($res);
+            if ($changed && isset($this->_properties['field_date_indexation']) && $this->_properties['field_date_indexation']) {
                 $sql  = "UPDATE " . $config['table'];
                 $sql .= " SET " . $this->_properties['field_date_indexation'] . " = NOW() ";
                 $sql .= " WHERE " . $config['table_primary_key'] . " = " . \Db::quote($item->id);

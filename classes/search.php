@@ -42,6 +42,10 @@ class Search
         }
     }
 
+    /**
+     * @param $res
+     * @return bool At least one changed keyword
+     */
     public function add_to_index($res)
     {
         $primary_key = $res[$this->config['table_primary_key']];
@@ -83,7 +87,9 @@ class Search
             foreach ($new_keywords as $field => $scores) {
                 $this->insert_keywords($primary_key, $scores, $field);
             }
+            return true;
         }
+        return false;
     }
 
 
