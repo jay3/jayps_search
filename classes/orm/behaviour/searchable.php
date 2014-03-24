@@ -103,13 +103,16 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
             $search = new Search($config);
             $changed = $search->add_to_index($res);
-            if ($changed && isset($this->_properties['field_date_indexation']) && $this->_properties['field_date_indexation']) {
-                $sql  = "UPDATE " . $config['table'];
-                $sql .= " SET " . $this->_properties['field_date_indexation'] . " = NOW() ";
-                $sql .= " WHERE " . $config['table_primary_key'] . " = " . \Db::quote($item->id);
-                \DB::query($sql)->execute();
+            if (!empty($this->_properties['field_date_indexation'])) {
+                // the model has a 'field_date_indexation' field
+                if ($changed || empty($item->{$this->_properties['field_date_indexation']})) {
+                    // some keywords have changed OR 'field_date_indexation' was not yet setted
+                    $sql  = "UPDATE " . $config['table'];
+                    $sql .= " SET " . $this->_properties['field_date_indexation'] . " = NOW() ";
+                    $sql .= " WHERE " . $config['table_primary_key'] . " = " . \Db::quote($item->id);
+                    \DB::query($sql)->execute();
+                }
             }
-
         }
     }
     private static function __build_pseudo_fields(&$res, $field, $arr_names)
