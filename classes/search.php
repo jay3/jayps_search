@@ -275,5 +275,33 @@ class Search
 
         return $keywords;
     }
+    public static function generate_keywords_fields($keywords_fields, $params, &$nb)
+    {
+        $default_params = array(
+            'min_word_len' => 2,
+            'max_keywords' => 5,
+        );
+        $params = array_merge($default_params, $params);
+
+        $nb = 0;
+        if (!is_array($keywords_fields)) {
+            return array();
+        }
+        $return = array();
+        $keywords_available = $params['max_keywords'];
+        foreach($keywords_fields as $field => $keywords) {
+            if ($keywords_available > 0) {
+                $keywords = static::generate_keywords($keywords, $params);
+
+                // truncate to $keywords_available keywords
+                $keywords = array_slice($keywords, 0, $keywords_available);
+
+                $return[$field] = $keywords;
+                $nb += count($keywords);
+                $keywords_available -= count($keywords);
+            }
+        }
+        return $return;
+    }
 
 }

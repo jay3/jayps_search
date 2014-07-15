@@ -201,7 +201,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
         foreach ($where as $k => $w) {
             if (is_array($w) && isset($w[0])) {
-                if ($w[0] == 'keywords') {
+                if ($w[0] == 'keywords' || $w[0] == 'keywords_fields') {
 
                     //self::d('before_query');
                     //self::d($w);
@@ -209,43 +209,52 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                     $class = $this->_class;
                     $table = $class::table();
 
-                    $keywords = $w[1];
-                    if (!empty($keywords)) {
-
-                        $keywords = Search::generate_keywords($keywords, array(
+                    if ($w[0] == 'keywords') {
+                        $keywords_fields = array('*' => $w[1]);
+                    } else {
+                        $keywords_fields = $w[1];
+                    }
+                    if (!empty($keywords_fields)) {
+                        $keywords_fields = Search::generate_keywords_fields($keywords_fields, array(
                             'min_word_len' => static::$_jaypssearch_config['min_word_len'],
                             // note: we remove "used" relations to prevent sql errors
                             // this could end to "no results"
                             // increase 'max_join' in your config in you really need to do that
                             'max_keywords' => static::$_jaypssearch_config['max_join'] - count($used_keywords),
-                        ));
-
-                        //self::d($keywords);
-                        if (count($keywords) > 0) {
+                        ), $nb_keywords);
+                        //self::d($keywords_fields);
+                        if ($nb_keywords > 0) {
                             //erase $where[$k] in a clean way before setting it
                             $where[$k] = array();
-                            // $keywords has been modified, so keys are 0, 1, 2...
-                            foreach ($keywords as $i => $keyword) {
-                                $keyword = str_replace('%', '', $keyword);
-                                if (mb_strpos($keyword, '*') !== false) {
-                                    $keyword = str_replace('*', '', $keyword) . '%';
-                                    $operator = 'LIKE';
-                                } else {
-                                    $operator = '=';
-                                }
-                                //replace where clause by the search conditions
-                                $clause = array(
-                                    array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i+1) . '.mooc_word', $operator,  $keyword),
-                                    array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i+1) . '.mooc_join_table', $table)
-                                );
-                                //in cas there is more than 1 keyword, ensure an it's an AND between them by adding another level with an array
-                                if (count($keywords) > 1) {
-                                    $where[$k][] = $clause;
-                                } else {
-                                    $where[$k] = $clause;
-                                }
+                            $i = 1;
+                            foreach($keywords_fields as $field => $keywords) {
+                                foreach ($keywords as $keyword) {
+                                    $keyword = str_replace('%', '', $keyword);
+                                    if (mb_strpos($keyword, '*') !== false) {
+                                        $keyword = str_replace('*', '', $keyword) . '%';
+                                        $operator = 'LIKE';
+                                    } else {
+                                        $operator = '=';
+                                    }
+                                    //replace where clause by the search conditions
+                                    $clause = array(
+                                        array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.mooc_word', $operator,  $keyword),
+                                        array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.mooc_join_table', $table)
+                                    );
+                                    if ($field != '*') {
+                                        // restrict search to a specific field
+                                        $clause[] = array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.mooc_field', $field);
+                                    }
+                                    //in case there is more than 1 keyword, ensure it's an AND between them by adding another level with an array
+                                    if (count($keywords) > 1) {
+                                        $where[$k][] = $clause;
+                                    } else {
+                                        $where[$k] = $clause;
+                                    }
 
-                                $options['related'][] = static::$_jaypssearch_config['table_liaison'].(count($used_keywords)+$i+1);
+                                    $options['related'][] = static::$_jaypssearch_config['table_liaison'].(count($used_keywords)+$i);
+                                    $i++;
+                                }
                             }
                             $used_keywords = array_merge($used_keywords, $keywords);
                         } else {
@@ -271,12 +280,12 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     protected static function _convert_where_syntax(&$where)
     {
         if (is_array($where)) {
-            if (isset($where[0]) && isset($where[1]) && isset($where[2]) && ($where[0] == 'keywords') && ($where[1] == '=')) {
+            if (isset($where[0]) && isset($where[1]) && isset($where[2]) && ($where[0] == 'keywords' || $where[0] == 'keywords_fields') && ($where[1] == '=')) {
                 // convert syntax array('keywords', '=', $keywords) to syntax array('keywords', $keywords)
                 $where = array($where[0], $where[2]);
             } else {
                 foreach ($where as $k => $w) {
-                    if (is_string($k) && ($k == 'keywords')) {
+                    if (is_string($k) && ($k == 'keywords' || $k == 'keywords_fields')) {
                         // convert syntax 'keywords' => $keywords to syntax array('keywords', $keywords)
                         $w = array($k, $w);
                         unset($where[$k]);
