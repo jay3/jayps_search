@@ -40,6 +40,9 @@ return array(
     'title_boost' => 1,
 
     'html_boost' => array(
-        'h1' => 1,
+        'h1' => 3,
+        'h2' => 2,
+        'h3' => 1,
+        'strong' => 1,
     )
 );

@@ -174,10 +174,9 @@ class Search
         return $this->wordScoring($txt, array('is_html' => $html, 'boost' => 0));
     }
 
-    public function wordScoring($txt, $conf)
+    public function wordScoring($txt, $conf, $scores_ini = null)
     {
-        $scores = array();
-        $base_score = $conf['boost'];
+        $scores = is_array($scores_ini) ? $scores_ini : array();
         if (!empty($conf['is_html'])) {
             $txt = str_replace('&nbsp;', ' ', $txt);
             // example: &amp;
@@ -186,13 +185,14 @@ class Search
             if (is_array($conf['is_html'])) {
                 //if a specific score must be applied on html fields
                 foreach ($conf['is_html'] as $markup => $boost) {
-                    $closing = '</'.substr($markup, 1);
-                    if (preg_match('/'.$markup.'(.*)'.$closing.'/', $txt, $sub_txt)) {
-                        foreach ($sub_txt as $sub) {
+                    $pattern = '`<'.preg_quote($markup, '`').'[^>]*>(.+)</'.preg_quote($markup, '`').'>`Uis';
+                    if (preg_match_all($pattern, $txt, $m)) {
+                        foreach ($m[1] as $sub) {
                             $scores = $this->wordScoring($sub, array(
                                 'boost' => $boost,
                                 'is_html' => false,
-                            ));
+                            ),
+                            $scores);
                         }
                     };
                 }
@@ -211,7 +211,7 @@ class Search
             // string lowercase
             $word = mb_strtolower($word);
 
-            $score = $base_score + 1 / (log10(($i+9) / 10) + 1);
+            $score = is_array($scores_ini) ? $conf['boost'] : 1 / (log10(($i+9) / 10) + 1);
 
             if (empty($scores[$word])) {
                 //self::log( $i.$word.':'.$score );
@@ -222,12 +222,14 @@ class Search
             }
         }
 
-        // sort words by score DESC
-        arsort($scores);
-        //d($scores);
-        $scores = array_map(function ($score) {
-            return intval(10 * $score);
-        }, $scores);
+        if (!is_array($scores_ini)) {
+            // sort words by score DESC
+            arsort($scores);
+            //d($scores);
+            $scores = array_map(function ($score) {
+                return intval(10 * $score);
+            }, $scores);
+        }
 
         return $scores;
     }
