@@ -246,7 +246,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                                         $clause[] = array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.mooc_field', $field);
                                     }
                                     //in case there is more than 1 keyword, ensure it's an AND between them by adding another level with an array
-                                    if (count($keywords) > 1) {
+                                    if ($nb_keywords > 1) {
                                         $where[$k][] = $clause;
                                     } else {
                                         $where[$k] = $clause;
