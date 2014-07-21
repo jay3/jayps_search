@@ -85,7 +85,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
             $res = array();
             $res[$config['table_primary_key']] = $item->id;
-            foreach ($this->_properties['fields'] as $field) {
+            foreach ($this->_properties['fields'] as $field => $conf) {
                 if (strpos($field, 'wysiwyg_') === 0) {
                     // backward compatibility
                     $field = preg_replace('/^wysiwyg_/', 'wysiwygs->', $field);
@@ -163,6 +163,35 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
         );
 
         $config = array_merge(static::$_jaypssearch_config, $config);
+
+        // Apply default config on each field if needed
+        $default_html = !empty($config['html_boost']) && is_array($config['html_boost']) ? $config['html_boost'] : true;
+        $config_fields = array();
+        foreach($config['table_fields_to_index'] as $field => $prop) {
+            if (is_string($prop) && is_numeric($field)) {
+                // only the name of the field has been given : construct default config
+                $config_fields[$prop] = array(
+                    'boost' => (strcmp($prop, $item->title_property()) === 0) && !empty($config['title_boost']) ? $config['title_boost'] : 0,
+                    'is_html' => strpos($prop, 'wysiwygs->') !== false ? $default_html : false
+                );
+            } elseif (is_numeric($prop)) {
+                // a boost has been provided
+                $config_fields[$field] = array(
+                    'boost' => $prop,
+                    'is_html' => false
+                );
+            } else {
+                // a config is written for the field
+                // it can be either the field config for model (default value retrieve from $this->_properties['fields'])
+                // or a specific config for search
+                // each key must be tested
+                $config_fields[$field] = array(
+                    'boost' => isset($prop['boost']) ? $prop['boost'] : ((strcmp($prop, $this->title_property()) === 0) && !empty($config['title_boost']) ? $config['title_boost'] : 0),
+                    'is_html' => isset($prop['is_html']) ? $prop['is_html'] : (strpos($field, 'wysiwygs->') !== false ? $default_html : false),
+                );
+            }
+        }
+        $this->_properties['fields'] = $config['table_fields_to_index'] = $config_fields;
 
         if (isset($this->_properties['debug'])) {
             // if the propertie 'debug' is set in the configuration of the behaviour, we use it

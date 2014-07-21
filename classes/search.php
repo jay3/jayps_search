@@ -67,18 +67,8 @@ class Search
             }
         }
 
-        foreach ($this->config['table_fields_to_index'] as $field) {
-            if (strpos($field, 'wysiwyg_') === 0) {
-                // backward compatibility
-                $field = preg_replace('/^wysiwyg_/', 'wysiwygs->', $field);
-            }
-            if (strpos($field, 'wysiwygs->') !== false) {
-                // it contains HTML tags
-                $scores = $this->split($res[$field], true);
-            } else {
-                $scores = $this->split($res[$field]);
-            }
-            $new_keywords[$field] = $scores;
+        foreach ($this->config['table_fields_to_index'] as $field => $conf) {
+            $new_keywords[$field] = $this->wordScoring($res[$field], $conf);
         }
 
         $diff = self::different_keywords($old_keywords, $new_keywords);
@@ -148,18 +138,39 @@ class Search
         return preg_split($regex, $txt);
     }
 
-    /** @brief coupe une chaîne en mots
-     *
+    /**
+     * @deprecated use wordScoring($txt, $html)
+     * @param $txt string : word
+     * @param $html bool : is_html ?
      */
-    public function split($txt, $html = false)
+    public function split($txt, $html = false) {
+        \Log::deprecated('->split() is deprecated, use ->wordScoring($txt, array(\'is_html\' => $html, \'boost\' => 0)) instead');
+        return $this->wordScoring($txt, array('is_html' => $html, 'boost' => 0));
+    }
+
+    public function wordScoring($txt, $conf)
     {
         $scores = array();
-        if ($html) {
+        $base_score = $conf['boost'];
+        if (!empty($conf['is_html'])) {
             $txt = str_replace('&nbsp;', ' ', $txt);
             // example: &amp;
             $txt = html_entity_decode($txt);
             //$txt = str_replace('>', '> ', $txt); // if we want 'test<sting>test2</strong>' => 'test test2'
-
+            if (is_array($conf['is_html'])) {
+                //if a specific score must be applied on html fields
+                foreach ($conf['is_html'] as $markup => $boost) {
+                    $closing = '</'.substr($markup, 1);
+                    if (preg_match('/'.$markup.'(.*)'.$closing.'/', $txt, $sub_txt)) {
+                        foreach ($sub_txt as $sub) {
+                            $scores = $this->wordScoring($sub, array(
+                                'boost' => $boost,
+                                'is_html' => false,
+                            ));
+                        }
+                    };
+                }
+            }
             $txt = strip_tags($txt);
         }
         //if (count($scores)) d($scores);
@@ -176,7 +187,7 @@ class Search
                 continue;
             }
 
-            $score = 1 / (log10(($i+9) / 10) + 1);
+            $score = $base_score + 1 / (log10(($i+9) / 10) + 1);
 
             if (empty($scores[$word])) {
                 //self::log( $i.$word.':'.$score );
@@ -203,6 +214,9 @@ class Search
         if (!$primary_key) {
             return;
         }
+        $scores = array_filter($scores, function($score) {
+            return $score > 0;
+        });
         if (!count($scores)) {
             return;
         }
