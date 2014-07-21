@@ -1,5 +1,13 @@
 JayPS Search CHANGELOG
 
+July 21, 2014 : version 1.1
+===========================
+* A setup can be configured to modify scoring depending on the nature of the fields.
+  eg. a boost can be provided if the field is the title.
+  See config/config.php
+* API changed, split() method is deprecated, use wordScoring() instead.
+  The new method takes the word and its config as params.
+
 November 6th, 2013: version 1.0
 ==============================
 * Now support 'relation->field' syntax to index fields from relations (has_one, has_many, many_many and belongs_to)
