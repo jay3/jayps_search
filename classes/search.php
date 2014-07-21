@@ -68,7 +68,13 @@ class Search
         }
 
         foreach ($this->config['table_fields_to_index'] as $field => $conf) {
-            $new_keywords[$field] = $this->wordScoring($res[$field], $conf);
+            // txt can be prepared before retrieving words
+            $prepare = !empty($conf['prepare_field']) ? $conf['prepare_field'] : (!empty($this->config['prepare_field']) ? $this->config['prepare_field'] : null);
+            $txt = $res[$field];
+            if (!empty($prepare) && is_callable($prepare)) {
+                $txt = $prepare($txt, $field);
+            }
+            $new_keywords[$field] = $this->wordScoring($txt, $conf);
         }
 
         $diff = self::different_keywords($old_keywords, $new_keywords);

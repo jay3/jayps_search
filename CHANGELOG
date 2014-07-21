@@ -7,6 +7,7 @@ July 21, 2014 : version 1.1
   See config/config.php
 * API changed, split() method is deprecated, use wordScoring() instead.
   The new method takes the word and its config as params.
+* A 'prepare_field' callback can be provided to prepare the value for a specific field, or for all the fields in general config.
 
 November 6th, 2013: version 1.0
 ==============================
