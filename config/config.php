@@ -37,10 +37,9 @@ return array(
     'words_by_insert' => 100,
 
     /** @brief score can be improved by this config*/
-    /* uncomment to use default boost
     'title_boost' => 1,
 
     'html_boost' => array(
         'h1' => 1,
-    )*/
+    )
 );
