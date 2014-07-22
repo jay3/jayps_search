@@ -67,18 +67,14 @@ class Search
             }
         }
 
-        foreach ($this->config['table_fields_to_index'] as $field) {
-            if (strpos($field, 'wysiwyg_') === 0) {
-                // backward compatibility
-                $field = preg_replace('/^wysiwyg_/', 'wysiwygs->', $field);
+        foreach ($this->config['table_fields_to_index'] as $field => $conf) {
+            // txt can be prepared before retrieving words
+            $prepare = !empty($conf['prepare_field']) ? $conf['prepare_field'] : (!empty($this->config['prepare_field']) ? $this->config['prepare_field'] : null);
+            $txt = $res[$field];
+            if (!empty($prepare) && is_callable($prepare)) {
+                $txt = $prepare($txt, $field);
             }
-            if (strpos($field, 'wysiwygs->') !== false) {
-                // it contains HTML tags
-                $scores = $this->split($res[$field], true);
-            } else {
-                $scores = $this->split($res[$field]);
-            }
-            $new_keywords[$field] = $scores;
+            $new_keywords[$field] = $this->wordScoring($txt, $conf);
         }
 
         $diff = self::different_keywords($old_keywords, $new_keywords);
@@ -131,6 +127,8 @@ class Search
     {
         $default_params = array(
             'allowable_chars' => '', // to allow specific characters, example '*' for the search
+            'min_word_len' => null, // a min length can be provided to exclude words
+            'forbidden_words' => array(), // exclude specific words
         );
         $params = array_merge($default_params, $params);
 
@@ -145,38 +143,75 @@ class Search
             }
         }
 
-        return preg_split($regex, $txt);
+        $keywords = preg_split($regex, $txt);
+
+        // deal with short words
+        if (!empty($params['min_word_len'])) {
+            $min_word_len = $params['min_word_len'];
+            // remove keywords shorter than 'min_word_len' characters
+            $keywords = array_filter($keywords, function ($a) use ($min_word_len) {
+                return mb_strlen($a) >= $min_word_len;
+            });
+        }
+
+        // remove forbidden keywords
+        if (!empty($params['forbidden_words'])) {
+            $forbidden_words = $params['forbidden_words'];
+            $keywords = array_filter($keywords, function ($a) use ($forbidden_words) {
+                return !in_array($a, $forbidden_words);
+            });
+        }
+        return $keywords;
     }
 
-    /** @brief coupe une chaîne en mots
-     *
+    /**
+     * @deprecated use wordScoring($txt, $html)
+     * @param $txt string : word
+     * @param $html bool : is_html ?
      */
-    public function split($txt, $html = false)
+    public function split($txt, $html = false) {
+        \Log::deprecated('->split() is deprecated, use ->wordScoring($txt, array(\'is_html\' => $html, \'boost\' => 0)) instead');
+        return $this->wordScoring($txt, array('is_html' => $html, 'boost' => 0));
+    }
+
+    public function wordScoring($txt, $conf, $scores_ini = null)
     {
-        $scores = array();
-        if ($html) {
+        $scores = is_array($scores_ini) ? $scores_ini : array();
+        if (!empty($conf['is_html'])) {
             $txt = str_replace('&nbsp;', ' ', $txt);
             // example: &amp;
             $txt = html_entity_decode($txt);
             //$txt = str_replace('>', '> ', $txt); // if we want 'test<sting>test2</strong>' => 'test test2'
-
+            if (is_array($conf['is_html'])) {
+                //if a specific score must be applied on html fields
+                foreach ($conf['is_html'] as $markup => $boost) {
+                    $pattern = '`<'.preg_quote($markup, '`').'[^>]*>(.+)</'.preg_quote($markup, '`').'>`Uis';
+                    if (preg_match_all($pattern, $txt, $m)) {
+                        foreach ($m[1] as $sub) {
+                            $scores = $this->wordScoring($sub, array(
+                                'boost' => $boost,
+                                'is_html' => false,
+                            ),
+                            $scores);
+                        }
+                    };
+                }
+            }
             $txt = strip_tags($txt);
         }
         //if (count($scores)) d($scores);
 
-        $words = self::split_string($txt);
+        $words = self::split_string($txt, array(
+            'min_word_len' => $this->config['min_word_len'],
+        ));
 
         $i = 0;
         foreach ($words as $word) {
             $i++;
             // string lowercase
             $word = mb_strtolower($word);
-            // remove words shorter than $this->config['min_word_len'] caracters
-            if (mb_strlen($word) < $this->config['min_word_len']) {
-                continue;
-            }
 
-            $score = 1 / (log10(($i+9) / 10) + 1);
+            $score = is_array($scores_ini) ? $conf['boost'] : 1 / (log10(($i+9) / 10) + 1);
 
             if (empty($scores[$word])) {
                 //self::log( $i.$word.':'.$score );
@@ -187,12 +222,14 @@ class Search
             }
         }
 
-        // sort words by score DESC
-        arsort($scores);
-        //d($scores);
-        $scores = array_map(function ($score) {
-            return intval(10 * $score);
-        }, $scores);
+        if (!is_array($scores_ini)) {
+            // sort words by score DESC
+            arsort($scores);
+            //d($scores);
+            $scores = array_map(function ($score) {
+                return intval(10 * $score);
+            }, $scores);
+        }
 
         return $scores;
     }
@@ -203,6 +240,9 @@ class Search
         if (!$primary_key) {
             return;
         }
+        $scores = array_filter($scores, function($score) {
+            return $score > 0;
+        });
         if (!count($scores)) {
             return;
         }
@@ -253,18 +293,15 @@ class Search
         $params = array_merge($default_params, $params);
 
         if (!is_array($keywords)) {
-            $keywords = self::split_string($keywords, array('allowable_chars' => '*?'));
+            $keywords = self::split_string($keywords, array(
+                'allowable_chars' => '*?',
+                'min_word_len' => $params['min_word_len'],
+            ));
         }
 
         // sort keywords by length desc
         uasort($keywords, function ($a, $b) {
             return mb_strlen($a) < mb_strlen($b);
-        });
-
-        $min_word_len = $params['min_word_len'];
-        // remove keywords shorter than 'min_word_len' characters
-        $keywords = array_filter($keywords, function ($a) use ($min_word_len) {
-            return mb_strlen($a) >= $min_word_len;
         });
 
         // remove duplicates

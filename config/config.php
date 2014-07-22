@@ -35,4 +35,14 @@ return array(
 
     /** @brief group insertion of words */
     'words_by_insert' => 100,
+
+    /** @brief score can be improved by this config*/
+    'title_boost' => 1,
+
+    'html_boost' => array(
+        'h1' => 3,
+        'h2' => 2,
+        'h3' => 1,
+        'strong' => 1,
+    )
 );

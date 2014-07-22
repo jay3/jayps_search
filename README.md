@@ -5,7 +5,7 @@ A very simple search engine for Novius OS, based on Behaviours.
 
 Licensed under [MIT License](http://opensource.org/licenses/MIT)
 
-Current version: 1.0
+Current version: 1.1
 
 **Get started**
 
@@ -52,6 +52,35 @@ Configure which models will be searchable for example in your bootstrap.php:
 
         \JayPS\Search\Orm_Behaviour_Searchable::init_relations();
     });
+
+The config of the behaviour and the app can define score improvement as follow :
+        $config['observed_models']['noviusos_monkey::model/monkey'] = array(
+            'primary_key' => 'monk_id',
+            'config_behaviour' => array(
+                'fields' => array(
+                    'monk_name', // as this is the title, general config already defines a boost
+                    'monk_summary' => 1, //
+                    'wysiwygs->content' => array(
+                        'boost' => 0, // changes nothing, default value is 0
+                        'is_html' => true // will remove html markup.
+                    )
+                ),
+            ),
+        );
+        $config['observed_models']['noviusos_news::model/post'] = array(
+            'primary_key' => 'post_id',
+            'config_behaviour' => array(
+                'fields' => array(
+                    'post_title' => 2, // override general boost
+                    'wysiwygs->content' => array(
+                        'boost' => 1 // gives a score for all words in the content, regardless of their nature
+                        'is_html' => array(
+                            'h1' => 1 // provides another boost for words un h1 markup
+                        )
+                    )
+                ),
+            ),
+        );
 
 
 
