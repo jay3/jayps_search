@@ -1,5 +1,9 @@
 JayPS Search CHANGELOG
 
+July 22, 2014 : version 1.2
+===========================
+* Add possibility to search in specific field(s)
+
 July 21, 2014 : version 1.1
 ===========================
 * A setup can be configured to modify scoring depending on the nature of the fields.

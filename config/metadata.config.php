@@ -1,7 +1,7 @@
 <?php
 return array(
     'name'    => 'JayPS Search',
-    'version' => '1.1',
+    'version' => '1.2',
     'provider' => array(
         'name' => 'JayPS',
     ),

@@ -5,7 +5,7 @@ A very simple search engine for Novius OS, based on Behaviours.
 
 Licensed under [MIT License](http://opensource.org/licenses/MIT)
 
-Current version: 1.1
+Current version: 1.2
 
 **Get started**
 
@@ -118,5 +118,17 @@ To use the search with find(), simply provide an array of keywords. '*' acts as 
         ),
         'rows_limit' => 200,
         'order_by' => array('jayps_search_score', 'monk_name'),
+    ));
+```
+You can also restrict search to specific fields:
+```php
+    $pages = \Nos\Page\Model_Page::find('all', array(
+        'where' => array(
+            'keywords_fields' => array(
+                'page_title'        => 'keyword1 keyword2', // keyword1 and keyword2 must appear in title
+                'wysiwygs->content' => 'keyword3',          // keyword3 must appear in description
+                '*'                 => 'keyword4',          // keyword4 must appear anywhere
+            ),
+        ),
     ));
 ```
