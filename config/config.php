@@ -37,7 +37,7 @@ return array(
     'words_by_insert' => 100,
 
     /** @brief score can be improved by this config*/
-    'title_boost' => 1,
+    'title_boost' => 3,
 
     'html_boost' => array(
         'h1' => 3,
