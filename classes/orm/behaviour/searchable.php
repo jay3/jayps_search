@@ -257,7 +257,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                             //erase $where[$k] in a clean way before setting it
                             $where[$k] = array();
                             $i = 1;
-                            foreach($keywords_fields as $field => $keywords) {
+                            foreach($keywords_fields as $fields => $keywords) {
                                 foreach ($keywords as $keyword) {
                                     $keyword = str_replace('%', '', $keyword);
                                     if (mb_strpos($keyword, '*') !== false) {
@@ -271,9 +271,23 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                                         array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.mooc_word', $operator,  $keyword),
                                         array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.mooc_join_table', $table)
                                     );
-                                    if ($field != '*') {
-                                        // restrict search to a specific field
-                                        $clause[] = array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.mooc_field', $field);
+                                    if ($fields != '*' && $fields != '') {
+                                        // restrict search to a specific field (or several using OR)
+                                        // $fields can contain several fields name, separated by |
+                                        $fields2 = explode('|', $fields);
+                                        $clause_fields = array();
+                                        foreach($fields2 as $field) {
+                                            $clause_field = array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.mooc_field', $field);
+                                            if (count($clause_fields) == 0) {
+                                                $clause_fields = $clause_field;
+                                            } else {
+                                                $clause_fields = array(
+                                                    $clause_fields,
+                                                    'or' => $clause_field,
+                                                );
+                                            }
+                                        }
+                                        $clause[] = $clause_fields;
                                     }
                                     //in case there is more than 1 keyword, ensure it's an AND between them by adding another level with an array
                                     if ($nb_keywords > 1) {

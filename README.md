@@ -125,9 +125,10 @@ You can also restrict search to specific fields:
     $pages = \Nos\Page\Model_Page::find('all', array(
         'where' => array(
             'keywords_fields' => array(
-                'page_title'        => 'keyword1 keyword2', // keyword1 and keyword2 must appear in title
-                'wysiwygs->content' => 'keyword3',          // keyword3 must appear in description
-                '*'                 => 'keyword4',          // keyword4 must appear anywhere
+                'page_title'                    => 'keyword1 keyword2', // keyword1 and keyword2 must appear in title
+                'wysiwygs->content'             => 'keyword3',          // keyword3 must appear in description
+                '*'                             => 'keyword4',          // keyword4 must appear anywhere
+                'page_title|wysiwygs->content'  => 'keyword5',          // keyword5 must appear in title OR description
             ),
         ),
     ));
