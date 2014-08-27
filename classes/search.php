@@ -134,7 +134,8 @@ class Search
 
         // split the text with punctuations and spaces
         // include " ", \r, \t, \n et \f
-        $regex = "/[\s,'`’\"\(\)\.:;!\?*%-]+/";
+        // u (PCRE_UTF8) Pattern and subject strings are treated as UTF-8.
+        $regex = "/[\s,'`’\"\(\)\.:;!\?*%-]+/u";
 
         if (!empty($params['allowable_chars'])) {
             // remove specific characters form the regex
