@@ -231,20 +231,26 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
 
         foreach ($where as $k => $w) {
             if (is_array($w) && isset($w[0])) {
-                if ($w[0] == 'keywords' || $w[0] == 'keywords_fields') {
+                if (in_array($w[0], array('keywords', 'keywords_fields', 'keywords_fuzzy'))) {
 
                     //self::d('before_query');
                     //self::d($w);
 
                     $class = $this->_class;
                     $table = $class::table();
+                    $fuzzy =  false;
 
                     if ($w[0] == 'keywords') {
                         $keywords_fields = array('*' => $w[1]);
+                    } elseif ($w[0] == 'keywords_fuzzy') {
+                        $keywords_fields = array('*' => $w[1]);
+                        $fuzzy = true;
                     } else {
                         $keywords_fields = $w[1];
                     }
                     if (!empty($keywords_fields)) {
+                        $word_hash_callback = $fuzzy && !empty(static::$_jaypssearch_config['word_hash_callback']) && is_callable(static::$_jaypssearch_config['word_hash_callback']) ? static::$_jaypssearch_config['word_hash_callback'] : null;
+
                         $keywords_fields = Search::generate_keywords_fields($keywords_fields, array(
                             'min_word_len' => static::$_jaypssearch_config['min_word_len'],
                             // note: we remove "used" relations to prevent sql errors
@@ -261,14 +267,21 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                                 foreach ($keywords as $keyword) {
                                     $keyword = str_replace('%', '', $keyword);
                                     if (mb_strpos($keyword, '*') !== false) {
-                                        $keyword = str_replace('*', '', $keyword) . '%';
+                                        $keyword = str_replace('*', '', $keyword);
+                                        if (!empty($word_hash_callback)) {
+                                            $keyword = $word_hash_callback($keyword);
+                                        }
+                                        $keyword .= '%';
                                         $operator = 'LIKE';
                                     } else {
                                         $operator = '=';
+                                        if (!empty($word_hash_callback)) {
+                                            $keyword = $word_hash_callback($keyword);
+                                        }
                                     }
                                     //replace where clause by the search conditions
                                     $clause = array(
-                                        array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.mooc_word', $operator,  $keyword),
+                                        array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.' . (!empty($word_hash_callback) ? 'mooc_word_hash' : 'mooc_word'), $operator, $keyword),
                                         array(static::$_jaypssearch_config['table_liaison'] . (count($used_keywords)+$i) . '.mooc_join_table', $table)
                                     );
                                     if ($fields != '*' && $fields != '') {
@@ -324,7 +337,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
     protected static function _convert_where_syntax(&$where)
     {
         if (is_array($where)) {
-            if (isset($where[0]) && isset($where[1]) && isset($where[2]) && ($where[0] == 'keywords' || $where[0] == 'keywords_fields') && ($where[1] == '=')) {
+            if (isset($where[0]) && isset($where[1]) && isset($where[2]) && in_array($where[0], array('keywords', 'keywords_fields', 'keywords_fuzzy')) && ($where[1] == '=')) {
                 // convert syntax array('keywords', '=', $keywords) to syntax array('keywords', $keywords)
                 $where = array($where[0], $where[2]);
             } else {

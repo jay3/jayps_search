@@ -44,5 +44,21 @@ return array(
         'h2' => 2,
         'h3' => 1,
         'strong' => 1,
-    )
+    ),
+
+    /** @brief a callback to compute word hashes (used in fuzzy search) */
+    'word_hash_callback' => null,
+/*
+    // Examples
+    'word_hash_callback' => function ($string) {
+        // native php functions, work better with english words, lots of false positives
+        //return soundex($string);
+        return metaphone($string);
+
+        // Improved french soundex by Édouard BERGÉ
+        // Obtain it from http://www.roudoudou.com/phonetic.php (CC BY-NC 2.0)
+        //return phonetique($string);
+    },
+*/
+
 );

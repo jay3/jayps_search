@@ -25,6 +25,7 @@ class Search
             'min_word_len'          => 4,
             'transaction'           => false,
             'insert_delayed'        => false,
+            'word_hash_callback'    => null,
         );
 
         $this->config = array_merge($default_config, $config);
@@ -252,12 +253,17 @@ class Search
             \Db::query('START TRANSACTION')->execute();
         }
 
+        $word_hash_callback = !empty($this->config['word_hash_callback']) && is_callable($this->config['word_hash_callback']) ? $this->config['word_hash_callback'] : null;
+
         $sqli  = 'INSERT '.($this->config['insert_delayed'] ? 'DELAYED' : '').' INTO ' . $this->config['table_liaison'];
         $sqli .= ' (' . $this->config['table_liaison_prefixe'] . 'word';
         $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'join_table';
         $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'foreign_id';
         $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'field';
         $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'score';
+        if (!empty($word_hash_callback)) {
+            $sqli .= ', ' . $this->config['table_liaison_prefixe'] . 'word_hash';
+        }
         $sqli .= ') VALUES';
 
         // Chunks $words into smaller arrays. The last chunk may contain less elements.
@@ -274,6 +280,9 @@ class Search
                 $sql .= ', ' . \Db::quote($primary_key);
                 $sql .= ', ' . \Db::quote($field);
                 $sql .= ', ' . intval($score);
+                if (!empty($word_hash_callback)) {
+                    $sql .= ', ' . \Db::quote($word_hash_callback($word));
+                }
                 $sql .= ')';
             }
             self::log($sql);
