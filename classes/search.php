@@ -204,6 +204,7 @@ class Search
 
         $words = self::split_string($txt, array(
             'min_word_len' => $this->config['min_word_len'],
+            'forbidden_words' => $this->config['forbidden_words'],
         ));
 
         $i = 0;
