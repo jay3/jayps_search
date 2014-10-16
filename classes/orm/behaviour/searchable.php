@@ -258,6 +258,13 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                             $where[$k] = array();
                             $i = 1;
                             foreach($keywords_fields as $fields => $keywords) {
+                                // remove forbidden keywords
+                                if (!empty(static::$_jaypssearch_config['forbidden_words'])) {
+                                    $forbidden_words = static::$_jaypssearch_config['forbidden_words'];
+                                    $keywords = array_filter($keywords, function ($a) use ($forbidden_words) {
+                                        return !in_array($a, $forbidden_words);
+                                    });
+                                }
                                 foreach ($keywords as $keyword) {
                                     $keyword = str_replace('%', '', $keyword);
                                     if (mb_strpos($keyword, '*') !== false) {
