@@ -186,7 +186,7 @@ class Orm_Behaviour_Searchable extends \Nos\Orm_Behaviour
                 // or a specific config for search
                 // each key must be tested
                 $config_fields[$field] = array(
-                    'boost' => isset($prop['boost']) ? $prop['boost'] : ((strcmp($prop, $this->title_property()) === 0) && !empty($config['title_boost']) ? $config['title_boost'] : 0),
+                    'boost' => isset($prop['boost']) ? $prop['boost'] : ((strcmp($prop, $item->title_property()) === 0) && !empty($config['title_boost']) ? $config['title_boost'] : 0),
                     'is_html' => isset($prop['is_html']) ? $prop['is_html'] : (strpos($field, 'wysiwygs->') !== false ? $default_html : false),
                     'prepare_field' => isset($prop['prepare_field']) ? $prop['prepare_field'] : null,
                 );
